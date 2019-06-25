@@ -4880,6 +4880,7 @@ function _Browser_load(url)
 		}
 	}));
 }
+var author$project$Main$AllTasks = {$: 'AllTasks'};
 var author$project$Main$Incomplete = {$: 'Incomplete'};
 var author$project$Main$NotEditing = function (a) {
 	return {$: 'NotEditing', a: a};
@@ -4981,7 +4982,8 @@ var author$project$Main$initialModel = {
 			name: 'Groceries',
 			status: author$project$Main$Incomplete
 		}
-		])
+		]),
+	visibleTasks: author$project$Main$AllTasks
 };
 var author$project$Main$Complete = {$: 'Complete'};
 var elm$core$Basics$eq = _Utils_equal;
@@ -5162,7 +5164,6 @@ var author$project$Main$triggerEditableDescription = F2(
 			var _n0 = task.description;
 			if (_n0.$ === 'Editing') {
 				var val = _n0.a;
-				var bufferVal = _n0.b;
 				return _Utils_update(
 					task,
 					{
@@ -5299,7 +5300,7 @@ var author$project$Main$update = F2(
 							A2(author$project$Main$updateTaskDescriptionBuffer, task.id, val),
 							model.tasks)
 					});
-			default:
+			case 'CancelEditDescription':
 				var task = msg.a;
 				return _Utils_update(
 					model,
@@ -5309,32 +5310,59 @@ var author$project$Main$update = F2(
 							author$project$Main$cancelEditDescription(task.id),
 							model.tasks)
 					});
+			default:
+				var visibleTasksType = msg.a;
+				return _Utils_update(
+					model,
+					{visibleTasks: visibleTasksType});
 		}
 	});
 var author$project$Main$AddTask = {$: 'AddTask'};
 var author$project$Main$UpdateInputTaskName = function (a) {
 	return {$: 'UpdateInputTaskName', a: a};
 };
-var author$project$Main$DeleteTask = function (a) {
-	return {$: 'DeleteTask', a: a};
-};
-var author$project$Main$CancelEditDescription = function (a) {
-	return {$: 'CancelEditDescription', a: a};
-};
-var author$project$Main$EditDescription = function (a) {
-	return {$: 'EditDescription', a: a};
-};
-var author$project$Main$TriggerDescriptionEdit = function (a) {
-	return {$: 'TriggerDescriptionEdit', a: a};
-};
-var author$project$Main$UpdateTaskDescriptionBuffer = F2(
-	function (a, b) {
-		return {$: 'UpdateTaskDescriptionBuffer', a: a, b: b};
+var author$project$Main$filteredTaskListElements = F2(
+	function (visibleTask, tasks) {
+		switch (visibleTask.$) {
+			case 'AllTasks':
+				return tasks;
+			case 'CompleteTasks':
+				return A2(
+					elm$core$List$filter,
+					function (task) {
+						return _Utils_eq(task.status, author$project$Main$Complete);
+					},
+					tasks);
+			default:
+				return A2(
+					elm$core$List$filter,
+					function (task) {
+						return _Utils_eq(task.status, author$project$Main$Incomplete);
+					},
+					tasks);
+		}
 	});
-var elm$core$Basics$True = {$: 'True'};
+var author$project$Main$CompleteTasks = {$: 'CompleteTasks'};
+var author$project$Main$IncompleteTasks = {$: 'IncompleteTasks'};
+var author$project$Main$UpdateVisibleTasks = function (a) {
+	return {$: 'UpdateVisibleTasks', a: a};
+};
 var elm$core$Basics$apR = F2(
 	function (x, f) {
 		return f(x);
+	});
+var elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
+		}
 	});
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
@@ -5485,6 +5513,7 @@ var elm$core$Result$Err = function (a) {
 var elm$core$Result$Ok = function (a) {
 	return {$: 'Ok', a: a};
 };
+var elm$core$Basics$True = {$: 'True'};
 var elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -5697,57 +5726,12 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
-var elm$json$Json$Encode$bool = _Json_wrap;
-var elm$core$Basics$identity = function (x) {
-	return x;
-};
-var elm$json$Json$Decode$map = _Json_map1;
-var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$json$Json$Decode$succeed = _Json_succeed;
-var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
-	switch (handler.$) {
-		case 'Normal':
-			return 0;
-		case 'MayStopPropagation':
-			return 1;
-		case 'MayPreventDefault':
-			return 2;
-		default:
-			return 3;
-	}
-};
-var elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$bool(bool));
-	});
-var elm$html$Html$Attributes$contenteditable = elm$html$Html$Attributes$boolProperty('contentEditable');
-var elm$json$Json$Encode$string = _Json_wrap;
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
-var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
-var elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
-		}
-	});
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
+};
+var elm$core$Basics$identity = function (x) {
+	return x;
 };
 var visotype$elm_dom$Dom$Internal$Element = function (a) {
 	return {$: 'Element', a: a};
@@ -5779,82 +5763,25 @@ var visotype$elm_dom$Dom$addAction = function (_n0) {
 				});
 		});
 };
-var visotype$elm_dom$Dom$addAttributeList = function (la) {
-	return visotype$elm_dom$Dom$Internal$modify(
-		function (n) {
-			return _Utils_update(
-				n,
-				{
-					attributes: A2(elm$core$List$append, n.attributes, la)
-				});
-		});
-};
-var visotype$elm_dom$Dom$addClass = function (s) {
-	return visotype$elm_dom$Dom$Internal$modify(
-		function (n) {
-			return _Utils_update(
-				n,
-				{
-					classes: A2(
-						elm$core$List$append,
-						n.classes,
-						_List_fromArray(
-							[s]))
-				});
-		});
-};
-var elm$json$Json$Decode$string = _Json_decodeString;
-var elm$json$Json$Decode$field = _Json_decodeField;
-var elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
-	});
-var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var visotype$elm_dom$Dom$Internal$captureStopPropagation = F2(
-	function (_n0, token) {
-		var field = _n0.a;
-		var decoder = _n0.b;
-		return elm$virtual_dom$VirtualDom$MayStopPropagation(
-			A2(
-				elm$json$Json$Decode$map,
-				function (x) {
-					return _Utils_Tuple2(x, true);
-				},
-				A2(
-					elm$json$Json$Decode$map,
-					token,
-					A2(
-						elm$json$Json$Decode$at,
-						_List_fromArray(
-							['target', field]),
-						decoder))));
-	});
-var visotype$elm_dom$Dom$addInputHandler = function (token) {
-	var handler = visotype$elm_dom$Dom$Internal$captureStopPropagation(
-		_Utils_Tuple2('value', elm$json$Json$Decode$string));
-	return visotype$elm_dom$Dom$Internal$modify(
-		function (n) {
-			return _Utils_update(
-				n,
-				{
-					listeners: A2(
-						elm$core$List$append,
-						n.listeners,
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'input',
-								handler(token))
-							]))
-				});
-		});
-};
 var elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
 	});
+var elm$json$Json$Encode$string = _Json_wrap;
+var elm$json$Json$Decode$map = _Json_map1;
+var elm$json$Json$Decode$map2 = _Json_map2;
+var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
+	switch (handler.$) {
+		case 'Normal':
+			return 0;
+		case 'MayStopPropagation':
+			return 1;
+		case 'MayPreventDefault':
+			return 2;
+		default:
+			return 3;
+	}
+};
 var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
 	return _VirtualDom_keyedNode(
 		_VirtualDom_noScript(tag));
@@ -6041,6 +5968,144 @@ var visotype$elm_dom$Dom$element = function (tag) {
 	return visotype$elm_dom$Dom$Internal$Element(
 		{attributes: _List_Nil, children: _List_Nil, classes: _List_Nil, id: '', keys: _List_Nil, listeners: _List_Nil, namespace: '', styles: _List_Nil, tag: tag, text: ''});
 };
+var author$project$Main$taskFilterElements = A2(
+	visotype$elm_dom$Dom$appendChildList,
+	_List_fromArray(
+		[
+			A2(
+			visotype$elm_dom$Dom$addAction,
+			_Utils_Tuple2(
+				'click',
+				author$project$Main$UpdateVisibleTasks(author$project$Main$AllTasks)),
+			A2(
+				visotype$elm_dom$Dom$appendText,
+				'All Tasks',
+				visotype$elm_dom$Dom$element('button'))),
+			A2(
+			visotype$elm_dom$Dom$addAction,
+			_Utils_Tuple2(
+				'click',
+				author$project$Main$UpdateVisibleTasks(author$project$Main$CompleteTasks)),
+			A2(
+				visotype$elm_dom$Dom$appendText,
+				'Completed Tasks',
+				visotype$elm_dom$Dom$element('button'))),
+			A2(
+			visotype$elm_dom$Dom$addAction,
+			_Utils_Tuple2(
+				'click',
+				author$project$Main$UpdateVisibleTasks(author$project$Main$IncompleteTasks)),
+			A2(
+				visotype$elm_dom$Dom$appendText,
+				'Incomplete Tasks',
+				visotype$elm_dom$Dom$element('button')))
+		]),
+	visotype$elm_dom$Dom$element('div'));
+var author$project$Main$DeleteTask = function (a) {
+	return {$: 'DeleteTask', a: a};
+};
+var author$project$Main$CancelEditDescription = function (a) {
+	return {$: 'CancelEditDescription', a: a};
+};
+var author$project$Main$EditDescription = function (a) {
+	return {$: 'EditDescription', a: a};
+};
+var author$project$Main$TriggerDescriptionEdit = function (a) {
+	return {$: 'TriggerDescriptionEdit', a: a};
+};
+var author$project$Main$UpdateTaskDescriptionBuffer = F2(
+	function (a, b) {
+		return {$: 'UpdateTaskDescriptionBuffer', a: a, b: b};
+	});
+var elm$json$Json$Encode$bool = _Json_wrap;
+var elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$bool(bool));
+	});
+var elm$html$Html$Attributes$contenteditable = elm$html$Html$Attributes$boolProperty('contentEditable');
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
+var visotype$elm_dom$Dom$addAttributeList = function (la) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					attributes: A2(elm$core$List$append, n.attributes, la)
+				});
+		});
+};
+var visotype$elm_dom$Dom$addClass = function (s) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					classes: A2(
+						elm$core$List$append,
+						n.classes,
+						_List_fromArray(
+							[s]))
+				});
+		});
+};
+var elm$json$Json$Decode$string = _Json_decodeString;
+var elm$json$Json$Decode$field = _Json_decodeField;
+var elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
+	});
+var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var visotype$elm_dom$Dom$Internal$captureStopPropagation = F2(
+	function (_n0, token) {
+		var field = _n0.a;
+		var decoder = _n0.b;
+		return elm$virtual_dom$VirtualDom$MayStopPropagation(
+			A2(
+				elm$json$Json$Decode$map,
+				function (x) {
+					return _Utils_Tuple2(x, true);
+				},
+				A2(
+					elm$json$Json$Decode$map,
+					token,
+					A2(
+						elm$json$Json$Decode$at,
+						_List_fromArray(
+							['target', field]),
+						decoder))));
+	});
+var visotype$elm_dom$Dom$addInputHandler = function (token) {
+	var handler = visotype$elm_dom$Dom$Internal$captureStopPropagation(
+		_Utils_Tuple2('value', elm$json$Json$Decode$string));
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					listeners: A2(
+						elm$core$List$append,
+						n.listeners,
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'input',
+								handler(token))
+							]))
+				});
+		});
+};
 var author$project$Main$taskDescriptionElement = function (task) {
 	var _n0 = task.description;
 	if (_n0.$ === 'NotEditing') {
@@ -6058,7 +6123,6 @@ var author$project$Main$taskDescriptionElement = function (task) {
 					'description',
 					visotype$elm_dom$Dom$element('div'))));
 	} else {
-		var val = _n0.a;
 		var bufferVal = _n0.b;
 		return A2(
 			visotype$elm_dom$Dom$appendChildList,
@@ -6214,9 +6278,13 @@ var author$project$Main$view = function (model) {
 								visotype$elm_dom$Dom$element('button')))
 						]),
 					visotype$elm_dom$Dom$element('div')),
+					author$project$Main$taskFilterElements,
 					A2(
 					visotype$elm_dom$Dom$appendChildList,
-					A2(elm$core$List$map, author$project$Main$taskListElement, model.tasks),
+					A2(
+						elm$core$List$map,
+						author$project$Main$taskListElement,
+						A2(author$project$Main$filteredTaskListElements, model.visibleTasks, model.tasks)),
 					visotype$elm_dom$Dom$element('ul'))
 				]),
 			visotype$elm_dom$Dom$element('div')));
@@ -10409,7 +10477,7 @@ var elm$browser$Browser$sandbox = function (impl) {
 var author$project$Main$main = elm$browser$Browser$sandbox(
 	{init: author$project$Main$initialModel, update: author$project$Main$update, view: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
-	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : Main.EditableString, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"DeleteTask":["Main.Task"],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"],"TriggerDescriptionEdit":["Main.Task"],"EditDescription":["Main.Task"],"UpdateTaskDescriptionBuffer":["Main.Task","String.String"],"CancelEditDescription":["Main.Task"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Main.EditableString":{"args":[],"tags":{"NotEditing":["String.String"],"Editing":["String.String","String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
+	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : Main.EditableString, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"DeleteTask":["Main.Task"],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"],"TriggerDescriptionEdit":["Main.Task"],"EditDescription":["Main.Task"],"UpdateTaskDescriptionBuffer":["Main.Task","String.String"],"CancelEditDescription":["Main.Task"],"UpdateVisibleTasks":["Main.VisibleTasks"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Main.EditableString":{"args":[],"tags":{"NotEditing":["String.String"],"Editing":["String.String","String.String"]}},"Main.VisibleTasks":{"args":[],"tags":{"AllTasks":[],"CompleteTasks":[],"IncompleteTasks":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
 
 var app = Elm.Main.init({ node: document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49") });
 if (document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49"))

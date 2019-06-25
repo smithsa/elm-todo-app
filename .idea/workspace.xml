@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="aaecec94-f75f-4794-bdac-45dd691c3630" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/elm-stuff/0.19.0/Main.elmi" beforeDir="false" afterPath="$PROJECT_DIR$/elm-stuff/0.19.0/Main.elmi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/elm-stuff/0.19.0/Main.elmo" beforeDir="false" afterPath="$PROJECT_DIR$/elm-stuff/0.19.0/Main.elmo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.elm" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.elm" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
@@ -25,8 +27,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Main.elm">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="267">
-              <caret line="100" column="57" selection-start-line="100" selection-start-column="36" selection-end-line="100" selection-end-column="57" />
+            <state relative-caret-position="131">
+              <caret line="309" column="39" selection-start-line="309" selection-start-column="39" selection-end-line="309" selection-end-column="39" />
               <folding>
                 <element signature="e#29#43#0" expanded="true" />
               </folding>
@@ -58,6 +60,8 @@
       <find>UpdateTaskDescriptionBuffer</find>
       <find>updateTaskDescriptionBuffer</find>
       <find>CancelEditDescription</find>
+      <find>model.</find>
+      <find>taskListElement</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -121,6 +125,12 @@
       </list>
     </option>
   </component>
+  <component name="RunManager">
+    <configuration default="true" type="ELM_TEST_RUN_CONFIGURATION" factoryName="Elm Test configuration factory">
+      <ElmTestRunConfiguration elm-folder="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -135,12 +145,12 @@
       <workItem from="1561409899491" duration="949000" />
       <workItem from="1561411019596" duration="13036000" />
       <workItem from="1561483017777" duration="6663000" />
-      <workItem from="1561494236413" duration="5068000" />
+      <workItem from="1561494236413" duration="7168000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="25928000" />
+    <option name="totallyTimeSpent" value="28028000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="292" y="23" width="1133" height="836" extended-state="0" />
@@ -156,7 +166,7 @@
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Elm Compiler" order="7" weight="0.13037634" />
+      <window_info anchor="bottom" id="Elm Compiler" order="7" weight="0.6424731" />
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info active="true" anchor="bottom" id="Terminal" order="10" visible="true" weight="0.3293011" />
@@ -174,8 +184,8 @@
     <entry file="file://$PROJECT_DIR$/index.html" />
     <entry file="file://$PROJECT_DIR$/src/Main.elm">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="267">
-          <caret line="100" column="57" selection-start-line="100" selection-start-column="36" selection-end-line="100" selection-end-column="57" />
+        <state relative-caret-position="131">
+          <caret line="309" column="39" selection-start-line="309" selection-start-column="39" selection-end-line="309" selection-end-column="39" />
           <folding>
             <element signature="e#29#43#0" expanded="true" />
           </folding>

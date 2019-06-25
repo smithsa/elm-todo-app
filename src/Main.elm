@@ -22,9 +22,16 @@ type EditableString
     | Editing String String
 
 
+type VisibleTasks
+    = AllTasks
+    | CompleteTasks
+    | IncompleteTasks
+
+
 type alias Model =
     { tasks : List Task
     , inputTaskName : String
+    , visibleTasks : VisibleTasks
     , editableDescriptionValue : String
     }
 
@@ -36,6 +43,7 @@ initialModel =
         , { id = 1, name = "Groceries", description = NotEditing "Must pick up groceries", status = Incomplete }
         ]
     , inputTaskName = ""
+    , visibleTasks = AllTasks
     , editableDescriptionValue = ""
     }
 
@@ -50,6 +58,7 @@ type Msg
     | EditDescription Task
     | UpdateTaskDescriptionBuffer Task String
     | CancelEditDescription Task
+    | UpdateVisibleTasks VisibleTasks
 
 
 update : Msg -> Model -> Model
@@ -101,6 +110,10 @@ update msg model =
                 | tasks = List.map (cancelEditDescription task.id) model.tasks
             }
 
+        UpdateVisibleTasks visibleTasksType ->
+            { model
+                | visibleTasks = visibleTasksType
+            }
 
 updateTaskStatus : Int -> CompletionStatus -> Task -> Task
 updateTaskStatus taskId completionStatus task =
@@ -115,7 +128,7 @@ triggerEditableDescription : Int -> Task -> Task
 triggerEditableDescription taskId task =
     if taskId == task.id then
         case task.description of
-            Editing val bufferVal ->
+            Editing val _ ->
                 { task | description = NotEditing val }
 
             NotEditing val ->
@@ -151,6 +164,7 @@ updateTaskDescriptionBuffer taskId inputVal task =
 
     else
         task
+
 
 cancelEditDescription : Int -> Task -> Task
 cancelEditDescription taskId task =
@@ -194,9 +208,12 @@ view model =
                         |> appendText "Add Task"
                         |> addAction ( "click", AddTask )
                     ]
+            , taskFilterElements
             , element "ul"
                 |> appendChildList
-                    (List.map taskListElement model.tasks)
+                    (filteredTaskListElements model.visibleTasks model.tasks
+                        |> List.map taskListElement
+                    )
             ]
         |> render
 
@@ -230,6 +247,19 @@ taskToggleCompleteButton task =
             |> addAction ( "click", CompleteTask task )
 
 
+filteredTaskListElements : VisibleTasks -> List Task -> List Task
+filteredTaskListElements visibleTask tasks =
+    case visibleTask of
+        AllTasks ->
+            tasks
+
+        CompleteTasks ->
+            List.filter (\task -> task.status == Complete) tasks
+
+        IncompleteTasks ->
+            List.filter (\task -> task.status == Incomplete) tasks
+
+
 taskListElement : Task -> Element Msg
 taskListElement task =
     element "li"
@@ -252,7 +282,7 @@ taskDescriptionElement task =
                 |> appendText val
                 |> addAction ( "click", TriggerDescriptionEdit task )
 
-        Editing val bufferVal ->
+        Editing _ bufferVal ->
             element "div"
                 |> appendChildList
                     [ element "input"
@@ -265,10 +295,26 @@ taskDescriptionElement task =
                     , element "button"
                         |> appendText "Save"
                         |> addAction ( "click", EditDescription task )
-                        , element "button"
+                    , element "button"
                         |> appendText "Cancel"
                         |> addAction ( "click", CancelEditDescription task )
                     ]
+
+
+taskFilterElements : Element Msg
+taskFilterElements =
+    element "div"
+        |> appendChildList
+            [ element "button"
+                |> appendText "All Tasks"
+                |> addAction ("click", UpdateVisibleTasks AllTasks)
+            , element "button"
+                |> appendText "Completed Tasks"
+                |> addAction ("click", UpdateVisibleTasks CompleteTasks)
+            , element "button"
+                |> appendText "Incomplete Tasks"
+                |> addAction ("click", UpdateVisibleTasks IncompleteTasks)
+            ]
 
 
 main : Program () Model Msg
