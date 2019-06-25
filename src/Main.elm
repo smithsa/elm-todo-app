@@ -48,6 +48,7 @@ type Msg
     | UpdateInputTaskName String
     | TriggerDescriptionEdit Task
     | EditDescription Task
+    | UpdateTaskDescriptionBuffer Task String
 
 
 update : Msg -> Model -> Model
@@ -85,7 +86,14 @@ update msg model =
             }
 
         EditDescription task ->
-            model
+            { model
+                | tasks = List.map (editDescription task.id) model.tasks
+            }
+
+        UpdateTaskDescriptionBuffer task val ->
+            { model
+                | tasks = List.map (updateTaskDescriptionBuffer task.id val) model.tasks
+            }
 
 
 updateTaskStatus : Int -> CompletionStatus -> Task -> Task
@@ -106,6 +114,34 @@ triggerEditableDescription taskId task =
 
             NotEditing val ->
                 { task | description = Editing val val }
+
+    else
+        task
+
+
+editDescription : Int -> Task -> Task
+editDescription taskId task =
+    if taskId == task.id then
+        case task.description of
+            Editing _ bufferVal ->
+                { task | description = NotEditing bufferVal }
+
+            NotEditing _ ->
+                task
+
+    else
+        task
+
+
+updateTaskDescriptionBuffer : Int -> String -> Task -> Task
+updateTaskDescriptionBuffer taskId inputVal task =
+    if taskId == task.id then
+        case task.description of
+            Editing val _ ->
+                { task | description = Editing val inputVal }
+
+            NotEditing _ ->
+                task
 
     else
         task
@@ -195,17 +231,21 @@ taskDescriptionElement task =
             element "div"
                 |> addClass "description"
                 |> appendText val
-                |> prependText "Description: "
                 |> addAction ( "click", TriggerDescriptionEdit task )
 
         Editing val bufferVal ->
             element "div"
                 |> appendChildList
                     [ element "input"
+                        |> addInputHandler (UpdateTaskDescriptionBuffer task)
                         |> addClass "description"
                         |> addAttributeList
-                            [ Html.Attributes.value val
+                            [ Html.Attributes.value bufferVal
+                            , Html.Attributes.contenteditable True
                             ]
+                    , element "button"
+                        |> appendText "Save"
+                        |> addAction ( "click", EditDescription task )
                     ]
 
 
