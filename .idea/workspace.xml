@@ -2,9 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aaecec94-f75f-4794-bdac-45dd691c3630" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/elm-stuff/0.19.0/Main.elmi" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/elm-stuff/0.19.0/Main.elmo" beforeDir="false" afterPath="$PROJECT_DIR$/elm-stuff/0.19.0/Main.elmo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.elm" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.elm" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
@@ -27,8 +24,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Main.elm">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="161" selection-start-line="161" selection-end-line="161" />
+            <state relative-caret-position="105">
+              <caret line="7" column="18" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
               <folding>
                 <element signature="e#29#43#0" expanded="true" />
               </folding>
@@ -131,12 +128,12 @@
       <workItem from="1561407509015" duration="212000" />
       <workItem from="1561409899491" duration="949000" />
       <workItem from="1561411019596" duration="13036000" />
-      <workItem from="1561483017777" duration="3474000" />
+      <workItem from="1561483017777" duration="3890000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="17671000" />
+    <option name="totallyTimeSpent" value="18087000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="307" y="23" width="1133" height="836" extended-state="0" />
@@ -170,8 +167,8 @@
     <entry file="file://$PROJECT_DIR$/index.html" />
     <entry file="file://$PROJECT_DIR$/src/Main.elm">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="161" selection-start-line="161" selection-end-line="161" />
+        <state relative-caret-position="105">
+          <caret line="7" column="18" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
           <folding>
             <element signature="e#29#43#0" expanded="true" />
           </folding>

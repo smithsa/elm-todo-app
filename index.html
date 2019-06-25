@@ -5083,14 +5083,23 @@ var elm$core$List$head = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
+var elm_community$maybe_extra$Maybe$Extra$unwrap = F3(
+	function (d, f, m) {
+		if (m.$ === 'Nothing') {
+			return d;
+		} else {
+			var a = m.a;
+			return f(a);
+		}
+	});
 var author$project$Main$nextTaskId = function (tasks) {
-	var _n0 = elm$core$List$head(tasks);
-	if (_n0.$ === 'Just') {
-		var lastTaskAdded = _n0.a;
-		return lastTaskAdded.id + 1;
-	} else {
-		return 0;
-	}
+	return A3(
+		elm_community$maybe_extra$Maybe$Extra$unwrap,
+		0,
+		function (lastTaskAdded) {
+			return lastTaskAdded.id + 1;
+		},
+		elm$core$List$head(tasks));
 };
 var elm$core$Basics$eq = _Utils_equal;
 var author$project$Main$updateTaskStatus = F3(

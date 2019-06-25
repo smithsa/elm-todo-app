@@ -5,7 +5,7 @@ import Dom exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (value, placeholder)
 import List
-import Maybe.Extra as Maybe
+import Maybe.Extra
 
 
 type alias Task =
@@ -89,13 +89,7 @@ deleteTask task tasks =
 
 nextTaskId : List Task -> Int
 nextTaskId tasks =
-    Maybe.Extra.unwrap
-    case List.head tasks of
-        Just lastTaskAdded ->
-            lastTaskAdded.id + 1
-
-        Nothing ->
-            0
+    Maybe.Extra.unwrap 0 (\lastTaskAdded -> lastTaskAdded.id + 1) (List.head tasks)
 
 
 view : Model -> Html Msg
