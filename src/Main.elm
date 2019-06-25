@@ -7,7 +7,7 @@ import List
 
 
 type alias Task =
-    { name : String, description : String, status : CompletionStatus }
+    { id : Int, name : String, description : String, status : CompletionStatus }
 
 
 type CompletionStatus
@@ -22,15 +22,16 @@ type alias Model =
 initialModel : Model
 initialModel =
     { tasks =
-        [ { name = "Walk the Dog", description = "Dog needs to be waled everyday", status = Incomplete }
-        , { name = "Groceries", description = "Must pick up groceries", status = Incomplete }
+        [ { id = 1, name = "Walk the Dog", description = "Dog needs to be waled everyday", status = Incomplete }
+        , { id = 2, name = "Groceries", description = "Must pick up groceries", status = Incomplete }
         ]
     }
 
 
 type Msg
     = AddTask
-    | CompleteTask
+    | CompleteTask Task
+    | UndoTaskCompletion Task
 
 
 update : Msg -> Model -> Model
@@ -38,8 +39,25 @@ update msg model =
     case msg of
         AddTask ->
             model
-        CompleteTask ->
-            model
+
+        CompleteTask task ->
+            { model
+                | tasks = List.map (updateTaskStatus task.id Complete) model.tasks
+            }
+
+        UndoTaskCompletion task ->
+            { model
+                | tasks = List.map (updateTaskStatus task.id Incomplete) model.tasks
+            }
+
+
+updateTaskStatus : Int -> CompletionStatus -> Task -> Task
+updateTaskStatus taskId completionStatus task =
+    if taskId == task.id then
+        { task | status = completionStatus }
+
+    else
+        task
 
 
 view : Model -> Html Msg
@@ -49,6 +67,7 @@ view model =
             (List.map taskElement model.tasks)
         |> render
 
+
 taskComplete : Task -> Bool
 taskComplete task =
     if task.status == Complete then
@@ -56,24 +75,26 @@ taskComplete task =
     else
         False
 
+
 taskName : Task -> Element Msg
 taskName task =
-            element "span"
-            |> appendText task.name
-            |> addStyleConditional ("text-decoration", "line-through") (taskComplete task)
+    element "span"
+        |> appendText task.name
+        |> addStyleConditional ( "text-decoration", "line-through" ) (taskComplete task)
 
 
 taskToggleButton : Task -> Element Msg
 taskToggleButton task =
-       if taskComplete task then
+    if taskComplete task then
         element "button"
             |> appendText "Undo"
-            |> addAction ("click", CompleteTask)
+            |> addAction ( "click", UndoTaskCompletion task)
 
-       else
+    else
         element "button"
             |> appendText "Complete"
-            |> addAction ("click", CompleteTask)
+            |> addAction ( "click", CompleteTask task)
+
 
 taskElement : Task -> Element Msg
 taskElement task =
