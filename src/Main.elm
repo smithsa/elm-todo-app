@@ -115,6 +115,7 @@ update msg model =
                 | visibleTasks = visibleTasksType
             }
 
+
 updateTaskStatus : Int -> CompletionStatus -> Task -> Task
 updateTaskStatus taskId completionStatus task =
     if taskId == task.id then
@@ -195,20 +196,23 @@ nextTaskId tasks =
 view : Model -> Html Msg
 view model =
     element "div"
+        |> addClass "todo"
         |> appendChildList
-            [ element "div"
+            [ taskFilterElements
+            , element "div"
                 |> appendChildList
                     [ element "input"
+                        |> addClass "addtask"
                         |> addAttributeList
                             [ Html.Attributes.value model.inputTaskName
                             , Html.Attributes.placeholder "What needs to be done?"
                             ]
                         |> addInputHandler UpdateInputTaskName
                     , element "button"
+                        |> addClass "addtask"
                         |> appendText "Add Task"
                         |> addAction ( "click", AddTask )
                     ]
-            , taskFilterElements
             , element "ul"
                 |> appendChildList
                     (filteredTaskListElements model.visibleTasks model.tasks
@@ -239,11 +243,13 @@ taskToggleCompleteButton task =
     if taskComplete task then
         element "button"
             |> appendText "Undo"
+            |> addClass "undo"
             |> addAction ( "click", UndoTaskCompletion task )
 
     else
         element "button"
             |> appendText "Complete"
+            |> addClass "complete"
             |> addAction ( "click", CompleteTask task )
 
 
@@ -266,8 +272,8 @@ taskListElement task =
         |> appendChildList
             [ taskName task
             , taskToggleCompleteButton task
-            , element "button"
-                |> appendText "Delete"
+            , element "span"
+                |> addClass "delete"
                 |> addAction ( "click", DeleteTask task )
             , taskDescriptionElement task
             ]
@@ -275,16 +281,17 @@ taskListElement task =
 
 taskDescriptionElement : Task -> Element Msg
 taskDescriptionElement task =
-    if (not <| taskComplete task) then
+    if not <| taskComplete task then
         case task.description of
             NotEditing val ->
                 element "div"
-                    |> addClass "description"
+                    |> addClass "description-container"
                     |> appendText val
                     |> addAction ( "click", TriggerDescriptionEdit task )
 
             Editing _ bufferVal ->
                 element "div"
+                    |> addClass "description"
                     |> appendChildList
                         [ element "input"
                             |> addInputHandler (UpdateTaskDescriptionBuffer task)
@@ -295,27 +302,32 @@ taskDescriptionElement task =
                                 ]
                         , element "button"
                             |> appendText "Save"
+                            |> addClass "save"
                             |> addAction ( "click", EditDescription task )
                         , element "button"
                             |> appendText "Cancel"
+                            |> addClass "cancel"
                             |> addAction ( "click", CancelEditDescription task )
                         ]
-        else
-            element "div"
+
+    else
+        element "div"
+
 
 taskFilterElements : Element Msg
 taskFilterElements =
     element "div"
+        |> addClass "filter"
         |> appendChildList
             [ element "button"
                 |> appendText "All Tasks"
-                |> addAction ("click", UpdateVisibleTasks AllTasks)
+                |> addAction ( "click", UpdateVisibleTasks AllTasks )
             , element "button"
                 |> appendText "Completed Tasks"
-                |> addAction ("click", UpdateVisibleTasks CompleteTasks)
+                |> addAction ( "click", UpdateVisibleTasks CompleteTasks )
             , element "button"
                 |> appendText "Incomplete Tasks"
-                |> addAction ("click", UpdateVisibleTasks IncompleteTasks)
+                |> addAction ( "click", UpdateVisibleTasks IncompleteTasks )
             ]
 
 
