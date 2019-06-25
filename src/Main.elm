@@ -3,13 +3,13 @@ module Main exposing (main)
 import Browser
 import Dom exposing (..)
 import Html exposing (Html)
-import Html.Attributes exposing (value, placeholder)
+import Html.Attributes exposing (placeholder, value)
 import List
 import Maybe.Extra
 
 
 type alias Task =
-    { id : Int, name : String, description : String, status : CompletionStatus }
+    { id : Int, name : String, description : EditableString, status : CompletionStatus }
 
 
 type CompletionStatus
@@ -17,19 +17,26 @@ type CompletionStatus
     | Incomplete
 
 
+type EditableString
+    = NotEditing String
+    | Editing String String
+
+
 type alias Model =
     { tasks : List Task
     , inputTaskName : String
+    , editableDescriptionValue : String
     }
 
 
 initialModel : Model
 initialModel =
     { tasks =
-        [ { id = 2, name = "Walk the Dog", description = "Dog needs to be waled everyday", status = Incomplete }
-        , { id = 1, name = "Groceries", description = "Must pick up groceries", status = Incomplete }
+        [ { id = 2, name = "Walk the Dog", description = NotEditing "Dog needs to be waled everyday", status = Incomplete }
+        , { id = 1, name = "Groceries", description = NotEditing "Must pick up groceries", status = Incomplete }
         ]
     , inputTaskName = ""
+    , editableDescriptionValue = ""
     }
 
 
@@ -39,6 +46,8 @@ type Msg
     | CompleteTask Task
     | UndoTaskCompletion Task
     | UpdateInputTaskName String
+    | TriggerDescriptionEdit Task
+    | EditDescription Task
 
 
 update : Msg -> Model -> Model
@@ -47,7 +56,7 @@ update msg model =
         AddTask ->
             { model
                 | inputTaskName = ""
-                , tasks = { id = nextTaskId model.tasks, name = model.inputTaskName, description = "", status = Incomplete } :: model.tasks
+                , tasks = { id = nextTaskId model.tasks, name = model.inputTaskName, description = NotEditing "", status = Incomplete } :: model.tasks
             }
 
         DeleteTask task ->
@@ -70,11 +79,33 @@ update msg model =
                 | inputTaskName = name
             }
 
+        TriggerDescriptionEdit task ->
+            { model
+                | tasks = List.map (triggerEditableDescription task.id) model.tasks
+            }
+
+        EditDescription task ->
+            model
+
 
 updateTaskStatus : Int -> CompletionStatus -> Task -> Task
 updateTaskStatus taskId completionStatus task =
     if taskId == task.id then
         { task | status = completionStatus }
+
+    else
+        task
+
+
+triggerEditableDescription : Int -> Task -> Task
+triggerEditableDescription taskId task =
+    if taskId == task.id then
+        case task.description of
+            Editing val bufferVal ->
+                { task | description = NotEditing val }
+
+            NotEditing val ->
+                { task | description = Editing val val }
 
     else
         task
@@ -99,10 +130,10 @@ view model =
             [ element "div"
                 |> appendChildList
                     [ element "input"
-                        |> addAttributeList [
-                            Html.Attributes.value model.inputTaskName,
-                            Html.Attributes.placeholder "What needs to be done?"
-                        ]
+                        |> addAttributeList
+                            [ Html.Attributes.value model.inputTaskName
+                            , Html.Attributes.placeholder "What needs to be done?"
+                            ]
                         |> addInputHandler UpdateInputTaskName
                     , element "button"
                         |> appendText "Add Task"
@@ -152,8 +183,30 @@ taskListElement task =
             , taskToggleCompleteButton task
             , element "button"
                 |> appendText "Delete"
-                |> addAction ("click", DeleteTask task)
+                |> addAction ( "click", DeleteTask task )
+            , taskDescriptionElement task
             ]
+
+
+taskDescriptionElement : Task -> Element Msg
+taskDescriptionElement task =
+    case task.description of
+        NotEditing val ->
+            element "div"
+                |> addClass "description"
+                |> appendText val
+                |> prependText "Description: "
+                |> addAction ( "click", TriggerDescriptionEdit task )
+
+        Editing val bufferVal ->
+            element "div"
+                |> appendChildList
+                    [ element "input"
+                        |> addClass "description"
+                        |> addAttributeList
+                            [ Html.Attributes.value val
+                            ]
+                    ]
 
 
 main : Program () Model Msg

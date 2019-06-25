@@ -863,6 +863,53 @@ var _Basics_xor = F2(function(a, b) { return a !== b; });
 
 
 
+function _Char_toCode(char)
+{
+	var code = char.charCodeAt(0);
+	if (0xD800 <= code && code <= 0xDBFF)
+	{
+		return (code - 0xD800) * 0x400 + char.charCodeAt(1) - 0xDC00 + 0x10000
+	}
+	return code;
+}
+
+function _Char_fromCode(code)
+{
+	return _Utils_chr(
+		(code < 0 || 0x10FFFF < code)
+			? '\uFFFD'
+			:
+		(code <= 0xFFFF)
+			? String.fromCharCode(code)
+			:
+		(code -= 0x10000,
+			String.fromCharCode(Math.floor(code / 0x400) + 0xD800, code % 0x400 + 0xDC00)
+		)
+	);
+}
+
+function _Char_toUpper(char)
+{
+	return _Utils_chr(char.toUpperCase());
+}
+
+function _Char_toLower(char)
+{
+	return _Utils_chr(char.toLowerCase());
+}
+
+function _Char_toLocaleUpper(char)
+{
+	return _Utils_chr(char.toLocaleUpperCase());
+}
+
+function _Char_toLocaleLower(char)
+{
+	return _Utils_chr(char.toLocaleLowerCase());
+}
+
+
+
 var _String_cons = F2(function(chr, str)
 {
 	return chr + str;
@@ -1172,53 +1219,6 @@ function _String_fromList(chars)
 	return _List_toArray(chars).join('');
 }
 
-
-
-
-function _Char_toCode(char)
-{
-	var code = char.charCodeAt(0);
-	if (0xD800 <= code && code <= 0xDBFF)
-	{
-		return (code - 0xD800) * 0x400 + char.charCodeAt(1) - 0xDC00 + 0x10000
-	}
-	return code;
-}
-
-function _Char_fromCode(code)
-{
-	return _Utils_chr(
-		(code < 0 || 0x10FFFF < code)
-			? '\uFFFD'
-			:
-		(code <= 0xFFFF)
-			? String.fromCharCode(code)
-			:
-		(code -= 0x10000,
-			String.fromCharCode(Math.floor(code / 0x400) + 0xD800, code % 0x400 + 0xDC00)
-		)
-	);
-}
-
-function _Char_toUpper(char)
-{
-	return _Utils_chr(char.toUpperCase());
-}
-
-function _Char_toLower(char)
-{
-	return _Utils_chr(char.toLowerCase());
-}
-
-function _Char_toLocaleUpper(char)
-{
-	return _Utils_chr(char.toLocaleUpperCase());
-}
-
-function _Char_toLocaleLower(char)
-{
-	return _Utils_chr(char.toLocaleLowerCase());
-}
 
 
 
@@ -4881,6 +4881,9 @@ function _Browser_load(url)
 	}));
 }
 var author$project$Main$Incomplete = {$: 'Incomplete'};
+var author$project$Main$NotEditing = function (a) {
+	return {$: 'NotEditing', a: a};
+};
 var elm$core$Basics$EQ = {$: 'EQ'};
 var elm$core$Basics$LT = {$: 'LT'};
 var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
@@ -4962,11 +4965,22 @@ var elm$core$Set$toList = function (_n0) {
 	return elm$core$Dict$keys(dict);
 };
 var author$project$Main$initialModel = {
+	editableDescriptionValue: '',
 	inputTaskName: '',
 	tasks: _List_fromArray(
 		[
-			{description: 'Dog needs to be waled everyday', id: 2, name: 'Walk the Dog', status: author$project$Main$Incomplete},
-			{description: 'Must pick up groceries', id: 1, name: 'Groceries', status: author$project$Main$Incomplete}
+			{
+			description: author$project$Main$NotEditing('Dog needs to be waled everyday'),
+			id: 2,
+			name: 'Walk the Dog',
+			status: author$project$Main$Incomplete
+		},
+			{
+			description: author$project$Main$NotEditing('Must pick up groceries'),
+			id: 1,
+			name: 'Groceries',
+			status: author$project$Main$Incomplete
+		}
 		])
 };
 var author$project$Main$Complete = {$: 'Complete'};
@@ -5101,7 +5115,35 @@ var author$project$Main$nextTaskId = function (tasks) {
 		},
 		elm$core$List$head(tasks));
 };
+var author$project$Main$Editing = F2(
+	function (a, b) {
+		return {$: 'Editing', a: a, b: b};
+	});
 var elm$core$Basics$eq = _Utils_equal;
+var author$project$Main$triggerEditableDescription = F2(
+	function (taskId, task) {
+		if (_Utils_eq(taskId, task.id)) {
+			var _n0 = task.description;
+			if (_n0.$ === 'Editing') {
+				var val = _n0.a;
+				var bufferVal = _n0.b;
+				return _Utils_update(
+					task,
+					{
+						description: author$project$Main$NotEditing(val)
+					});
+			} else {
+				var val = _n0.a;
+				return _Utils_update(
+					task,
+					{
+						description: A2(author$project$Main$Editing, val, val)
+					});
+			}
+		} else {
+			return task;
+		}
+	});
 var author$project$Main$updateTaskStatus = F3(
 	function (taskId, completionStatus, task) {
 		return _Utils_eq(taskId, task.id) ? _Utils_update(
@@ -5133,7 +5175,7 @@ var author$project$Main$update = F2(
 						tasks: A2(
 							elm$core$List$cons,
 							{
-								description: '',
+								description: author$project$Main$NotEditing(''),
 								id: author$project$Main$nextTaskId(model.tasks),
 								name: model.inputTaskName,
 								status: author$project$Main$Incomplete
@@ -5167,11 +5209,24 @@ var author$project$Main$update = F2(
 							A2(author$project$Main$updateTaskStatus, task.id, author$project$Main$Incomplete),
 							model.tasks)
 					});
-			default:
+			case 'UpdateInputTaskName':
 				var name = msg.a;
 				return _Utils_update(
 					model,
 					{inputTaskName: name});
+			case 'TriggerDescriptionEdit':
+				var task = msg.a;
+				return _Utils_update(
+					model,
+					{
+						tasks: A2(
+							elm$core$List$map,
+							author$project$Main$triggerEditableDescription(task.id),
+							model.tasks)
+					});
+			default:
+				var task = msg.a;
+				return model;
 		}
 	});
 var author$project$Main$AddTask = {$: 'AddTask'};
@@ -5181,94 +5236,12 @@ var author$project$Main$UpdateInputTaskName = function (a) {
 var author$project$Main$DeleteTask = function (a) {
 	return {$: 'DeleteTask', a: a};
 };
-var elm$core$Basics$False = {$: 'False'};
-var elm$core$Basics$True = {$: 'True'};
-var author$project$Main$taskComplete = function (task) {
-	return _Utils_eq(task.status, author$project$Main$Complete) ? true : false;
+var author$project$Main$TriggerDescriptionEdit = function (a) {
+	return {$: 'TriggerDescriptionEdit', a: a};
 };
 var elm$core$Basics$apR = F2(
 	function (x, f) {
 		return f(x);
-	});
-var elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
-		}
-	});
-var elm$core$Basics$identity = function (x) {
-	return x;
-};
-var visotype$elm_dom$Dom$Internal$Element = function (a) {
-	return {$: 'Element', a: a};
-};
-var visotype$elm_dom$Dom$Internal$modify = F2(
-	function (f, _n0) {
-		var data = _n0.a;
-		return visotype$elm_dom$Dom$Internal$Element(
-			f(data));
-	});
-var visotype$elm_dom$Dom$addStyle = function (kv) {
-	return visotype$elm_dom$Dom$Internal$modify(
-		function (n) {
-			return _Utils_update(
-				n,
-				{
-					styles: A2(
-						elm$core$List$append,
-						n.styles,
-						_List_fromArray(
-							[kv]))
-				});
-		});
-};
-var visotype$elm_dom$Dom$addStyleConditional = F2(
-	function (kv, test) {
-		if (test) {
-			return visotype$elm_dom$Dom$addStyle(kv);
-		} else {
-			return function (x) {
-				return x;
-			};
-		}
-	});
-var elm$core$String$append = _String_append;
-var visotype$elm_dom$Dom$appendText = function (s) {
-	return visotype$elm_dom$Dom$Internal$modify(
-		function (n) {
-			return _Utils_update(
-				n,
-				{
-					text: A2(elm$core$String$append, n.text, s)
-				});
-		});
-};
-var visotype$elm_dom$Dom$element = function (tag) {
-	return visotype$elm_dom$Dom$Internal$Element(
-		{attributes: _List_Nil, children: _List_Nil, classes: _List_Nil, id: '', keys: _List_Nil, listeners: _List_Nil, namespace: '', styles: _List_Nil, tag: tag, text: ''});
-};
-var author$project$Main$taskName = function (task) {
-	return A3(
-		visotype$elm_dom$Dom$addStyleConditional,
-		_Utils_Tuple2('text-decoration', 'line-through'),
-		author$project$Main$taskComplete(task),
-		A2(
-			visotype$elm_dom$Dom$appendText,
-			task.name,
-			visotype$elm_dom$Dom$element('span')));
-};
-var author$project$Main$CompleteTask = function (a) {
-	return {$: 'CompleteTask', a: a};
-};
-var author$project$Main$UndoTaskCompletion = function (a) {
-	return {$: 'UndoTaskCompletion', a: a};
-};
-var elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
 	});
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
@@ -5370,6 +5343,7 @@ var elm$core$Array$builderToArray = F2(
 				builder.tail);
 		}
 	});
+var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$idiv = _Basics_idiv;
 var elm$core$Basics$lt = _Utils_lt;
 var elm$core$Elm$JsArray$initialize = _JsArray_initialize;
@@ -5418,6 +5392,7 @@ var elm$core$Result$Err = function (a) {
 var elm$core$Result$Ok = function (a) {
 	return {$: 'Ok', a: a};
 };
+var elm$core$Basics$True = {$: 'True'};
 var elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -5630,10 +5605,58 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
+var elm$json$Json$Encode$string = _Json_wrap;
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
+var elm$json$Json$Decode$map = _Json_map1;
+var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$json$Json$Decode$succeed = _Json_succeed;
+var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
+	switch (handler.$) {
+		case 'Normal':
+			return 0;
+		case 'MayStopPropagation':
+			return 1;
+		case 'MayPreventDefault':
+			return 2;
+		default:
+			return 3;
+	}
+};
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
+var elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
+		}
+	});
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
+var visotype$elm_dom$Dom$Internal$Element = function (a) {
+	return {$: 'Element', a: a};
+};
+var visotype$elm_dom$Dom$Internal$modify = F2(
+	function (f, _n0) {
+		var data = _n0.a;
+		return visotype$elm_dom$Dom$Internal$Element(
+			f(data));
+	});
 var visotype$elm_dom$Dom$addAction = function (_n0) {
 	var event = _n0.a;
 	var msg = _n0.b;
@@ -5655,44 +5678,34 @@ var visotype$elm_dom$Dom$addAction = function (_n0) {
 				});
 		});
 };
-var author$project$Main$taskToggleCompleteButton = function (task) {
-	return author$project$Main$taskComplete(task) ? A2(
-		visotype$elm_dom$Dom$addAction,
-		_Utils_Tuple2(
-			'click',
-			author$project$Main$UndoTaskCompletion(task)),
-		A2(
-			visotype$elm_dom$Dom$appendText,
-			'Undo',
-			visotype$elm_dom$Dom$element('button'))) : A2(
-		visotype$elm_dom$Dom$addAction,
-		_Utils_Tuple2(
-			'click',
-			author$project$Main$CompleteTask(task)),
-		A2(
-			visotype$elm_dom$Dom$appendText,
-			'Complete',
-			visotype$elm_dom$Dom$element('button')));
+var visotype$elm_dom$Dom$addAttributeList = function (la) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					attributes: A2(elm$core$List$append, n.attributes, la)
+				});
+		});
+};
+var visotype$elm_dom$Dom$addClass = function (s) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					classes: A2(
+						elm$core$List$append,
+						n.classes,
+						_List_fromArray(
+							[s]))
+				});
+		});
 };
 var elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
 	});
-var elm$json$Json$Encode$string = _Json_wrap;
-var elm$json$Json$Decode$map = _Json_map1;
-var elm$json$Json$Decode$map2 = _Json_map2;
-var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
-	switch (handler.$) {
-		case 'Normal':
-			return 0;
-		case 'MayStopPropagation':
-			return 1;
-		case 'MayPreventDefault':
-			return 2;
-		default:
-			return 3;
-	}
-};
 var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
 	return _VirtualDom_keyedNode(
 		_VirtualDom_noScript(tag));
@@ -5864,6 +5877,133 @@ var visotype$elm_dom$Dom$appendChildList = function (le) {
 				});
 		});
 };
+var elm$core$String$append = _String_append;
+var visotype$elm_dom$Dom$appendText = function (s) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					text: A2(elm$core$String$append, n.text, s)
+				});
+		});
+};
+var visotype$elm_dom$Dom$element = function (tag) {
+	return visotype$elm_dom$Dom$Internal$Element(
+		{attributes: _List_Nil, children: _List_Nil, classes: _List_Nil, id: '', keys: _List_Nil, listeners: _List_Nil, namespace: '', styles: _List_Nil, tag: tag, text: ''});
+};
+var visotype$elm_dom$Dom$prependText = function (s) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					text: A2(elm$core$String$append, s, n.text)
+				});
+		});
+};
+var author$project$Main$taskDescriptionElement = function (task) {
+	var _n0 = task.description;
+	if (_n0.$ === 'NotEditing') {
+		var val = _n0.a;
+		return A2(
+			visotype$elm_dom$Dom$addAction,
+			_Utils_Tuple2(
+				'click',
+				author$project$Main$TriggerDescriptionEdit(task)),
+			A2(
+				visotype$elm_dom$Dom$prependText,
+				'Description: ',
+				A2(
+					visotype$elm_dom$Dom$appendText,
+					val,
+					A2(
+						visotype$elm_dom$Dom$addClass,
+						'description',
+						visotype$elm_dom$Dom$element('div')))));
+	} else {
+		var val = _n0.a;
+		var bufferVal = _n0.b;
+		return A2(
+			visotype$elm_dom$Dom$appendChildList,
+			_List_fromArray(
+				[
+					A2(
+					visotype$elm_dom$Dom$addAttributeList,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$value(val)
+						]),
+					A2(
+						visotype$elm_dom$Dom$addClass,
+						'description',
+						visotype$elm_dom$Dom$element('input')))
+				]),
+			visotype$elm_dom$Dom$element('div'));
+	}
+};
+var author$project$Main$taskComplete = function (task) {
+	return _Utils_eq(task.status, author$project$Main$Complete) ? true : false;
+};
+var visotype$elm_dom$Dom$addStyle = function (kv) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					styles: A2(
+						elm$core$List$append,
+						n.styles,
+						_List_fromArray(
+							[kv]))
+				});
+		});
+};
+var visotype$elm_dom$Dom$addStyleConditional = F2(
+	function (kv, test) {
+		if (test) {
+			return visotype$elm_dom$Dom$addStyle(kv);
+		} else {
+			return function (x) {
+				return x;
+			};
+		}
+	});
+var author$project$Main$taskName = function (task) {
+	return A3(
+		visotype$elm_dom$Dom$addStyleConditional,
+		_Utils_Tuple2('text-decoration', 'line-through'),
+		author$project$Main$taskComplete(task),
+		A2(
+			visotype$elm_dom$Dom$appendText,
+			task.name,
+			visotype$elm_dom$Dom$element('span')));
+};
+var author$project$Main$CompleteTask = function (a) {
+	return {$: 'CompleteTask', a: a};
+};
+var author$project$Main$UndoTaskCompletion = function (a) {
+	return {$: 'UndoTaskCompletion', a: a};
+};
+var author$project$Main$taskToggleCompleteButton = function (task) {
+	return author$project$Main$taskComplete(task) ? A2(
+		visotype$elm_dom$Dom$addAction,
+		_Utils_Tuple2(
+			'click',
+			author$project$Main$UndoTaskCompletion(task)),
+		A2(
+			visotype$elm_dom$Dom$appendText,
+			'Undo',
+			visotype$elm_dom$Dom$element('button'))) : A2(
+		visotype$elm_dom$Dom$addAction,
+		_Utils_Tuple2(
+			'click',
+			author$project$Main$CompleteTask(task)),
+		A2(
+			visotype$elm_dom$Dom$appendText,
+			'Complete',
+			visotype$elm_dom$Dom$element('button')));
+};
 var author$project$Main$taskListElement = function (task) {
 	return A2(
 		visotype$elm_dom$Dom$appendChildList,
@@ -5879,29 +6019,12 @@ var author$project$Main$taskListElement = function (task) {
 				A2(
 					visotype$elm_dom$Dom$appendText,
 					'Delete',
-					visotype$elm_dom$Dom$element('button')))
+					visotype$elm_dom$Dom$element('button'))),
+				author$project$Main$taskDescriptionElement(task)
 			]),
 		visotype$elm_dom$Dom$element('li'));
 };
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
-var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
-var visotype$elm_dom$Dom$addAttributeList = function (la) {
-	return visotype$elm_dom$Dom$Internal$modify(
-		function (n) {
-			return _Utils_update(
-				n,
-				{
-					attributes: A2(elm$core$List$append, n.attributes, la)
-				});
-		});
-};
 var elm$json$Json$Decode$string = _Json_decodeString;
 var elm$json$Json$Decode$field = _Json_decodeField;
 var elm$json$Json$Decode$at = F2(
@@ -10176,7 +10299,7 @@ var elm$browser$Browser$sandbox = function (impl) {
 var author$project$Main$main = elm$browser$Browser$sandbox(
 	{init: author$project$Main$initialModel, update: author$project$Main$update, view: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
-	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : String.String, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"DeleteTask":["Main.Task"],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
+	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : Main.EditableString, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"DeleteTask":["Main.Task"],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"],"TriggerDescriptionEdit":["Main.Task"],"EditDescription":["Main.Task"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Main.EditableString":{"args":[],"tags":{"NotEditing":["String.String"],"Editing":["String.String","String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
 
 var app = Elm.Main.init({ node: document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49") });
 if (document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49"))
