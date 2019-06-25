@@ -4,6 +4,7 @@ import Browser
 import Dom exposing (..)
 import Html exposing (Html)
 import List
+import Maybe.Extra as Maybe
 
 
 type alias Task =
@@ -16,7 +17,9 @@ type CompletionStatus
 
 
 type alias Model =
-    { tasks : List Task }
+    { tasks : List Task
+    , inputTaskName : String
+    }
 
 
 initialModel : Model
@@ -25,6 +28,7 @@ initialModel =
         [ { id = 1, name = "Walk the Dog", description = "Dog needs to be waled everyday", status = Incomplete }
         , { id = 2, name = "Groceries", description = "Must pick up groceries", status = Incomplete }
         ]
+    , inputTaskName = ""
     }
 
 
@@ -32,13 +36,16 @@ type Msg
     = AddTask
     | CompleteTask Task
     | UndoTaskCompletion Task
+    | UpdateInputTaskName String
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         AddTask ->
-            model
+            { model
+                | tasks = { id = nextTaskId model.tasks, name = model.inputTaskName, description = "", status = Incomplete } :: model.tasks
+            }
 
         CompleteTask task ->
             { model
@@ -48,6 +55,11 @@ update msg model =
         UndoTaskCompletion task ->
             { model
                 | tasks = List.map (updateTaskStatus task.id Incomplete) model.tasks
+            }
+
+        UpdateInputTaskName name ->
+            { model
+                | inputTaskName = name
             }
 
 
@@ -60,11 +72,36 @@ updateTaskStatus taskId completionStatus task =
         task
 
 
+nextTaskId : List Task -> Int
+nextTaskId tasks =
+    let
+        reveredTasks =
+            List.reverse tasks
+    in
+    case List.head reveredTasks of
+        Just lastTaskAdded ->
+            lastTaskAdded.id + 1
+
+        Nothing ->
+            0
+
+
 view : Model -> Html Msg
 view model =
-    element "ul"
+    element "div"
         |> appendChildList
-            (List.map taskElement model.tasks)
+            [ element "div"
+                |> appendChildList
+                    [ element "input"
+                        |> addInputHandler UpdateInputTaskName
+                    , element "button"
+                        |> appendText "Add Task"
+                        |> addAction ( "click", AddTask )
+                    ]
+            , element "ul"
+                |> appendChildList
+                    (List.map taskListElement model.tasks)
+            ]
         |> render
 
 
@@ -72,6 +109,7 @@ taskComplete : Task -> Bool
 taskComplete task =
     if task.status == Complete then
         True
+
     else
         False
 
@@ -88,16 +126,16 @@ taskToggleButton task =
     if taskComplete task then
         element "button"
             |> appendText "Undo"
-            |> addAction ( "click", UndoTaskCompletion task)
+            |> addAction ( "click", UndoTaskCompletion task )
 
     else
         element "button"
             |> appendText "Complete"
-            |> addAction ( "click", CompleteTask task)
+            |> addAction ( "click", CompleteTask task )
 
 
-taskElement : Task -> Element Msg
-taskElement task =
+taskListElement : Task -> Element Msg
+taskListElement task =
     element "li"
         |> appendChildList
             [ taskName task
