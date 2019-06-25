@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Dom exposing (..)
 import Html exposing (Html)
+import Html.Attributes exposing (value, placeholder)
 import List
 import Maybe.Extra as Maybe
 
@@ -25,8 +26,8 @@ type alias Model =
 initialModel : Model
 initialModel =
     { tasks =
-        [ { id = 1, name = "Walk the Dog", description = "Dog needs to be waled everyday", status = Incomplete }
-        , { id = 2, name = "Groceries", description = "Must pick up groceries", status = Incomplete }
+        [ { id = 2, name = "Walk the Dog", description = "Dog needs to be waled everyday", status = Incomplete }
+        , { id = 1, name = "Groceries", description = "Must pick up groceries", status = Incomplete }
         ]
     , inputTaskName = ""
     }
@@ -34,6 +35,7 @@ initialModel =
 
 type Msg
     = AddTask
+    | DeleteTask Task
     | CompleteTask Task
     | UndoTaskCompletion Task
     | UpdateInputTaskName String
@@ -44,7 +46,13 @@ update msg model =
     case msg of
         AddTask ->
             { model
-                | tasks = { id = nextTaskId model.tasks, name = model.inputTaskName, description = "", status = Incomplete } :: model.tasks
+                | inputTaskName = ""
+                , tasks = { id = nextTaskId model.tasks, name = model.inputTaskName, description = "", status = Incomplete } :: model.tasks
+            }
+
+        DeleteTask task ->
+            { model
+                | tasks = deleteTask task model.tasks
             }
 
         CompleteTask task ->
@@ -72,13 +80,17 @@ updateTaskStatus taskId completionStatus task =
         task
 
 
+deleteTask : Task -> List Task -> List Task
+deleteTask task tasks =
+    List.filter
+        (\currentTask -> currentTask.id /= task.id)
+        tasks
+
+
 nextTaskId : List Task -> Int
 nextTaskId tasks =
-    let
-        reveredTasks =
-            List.reverse tasks
-    in
-    case List.head reveredTasks of
+    Maybe.Extra.unwrap
+    case List.head tasks of
         Just lastTaskAdded ->
             lastTaskAdded.id + 1
 
@@ -93,6 +105,10 @@ view model =
             [ element "div"
                 |> appendChildList
                     [ element "input"
+                        |> addAttributeList [
+                            Html.Attributes.value model.inputTaskName,
+                            Html.Attributes.placeholder "What needs to be done?"
+                        ]
                         |> addInputHandler UpdateInputTaskName
                     , element "button"
                         |> appendText "Add Task"
@@ -121,8 +137,8 @@ taskName task =
         |> addStyleConditional ( "text-decoration", "line-through" ) (taskComplete task)
 
 
-taskToggleButton : Task -> Element Msg
-taskToggleButton task =
+taskToggleCompleteButton : Task -> Element Msg
+taskToggleCompleteButton task =
     if taskComplete task then
         element "button"
             |> appendText "Undo"
@@ -139,7 +155,10 @@ taskListElement task =
     element "li"
         |> appendChildList
             [ taskName task
-            , taskToggleButton task
+            , taskToggleCompleteButton task
+            , element "button"
+                |> appendText "Delete"
+                |> addAction ("click", DeleteTask task)
             ]
 
 

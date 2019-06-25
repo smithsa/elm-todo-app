@@ -4965,25 +4965,14 @@ var author$project$Main$initialModel = {
 	inputTaskName: '',
 	tasks: _List_fromArray(
 		[
-			{description: 'Dog needs to be waled everyday', id: 1, name: 'Walk the Dog', status: author$project$Main$Incomplete},
-			{description: 'Must pick up groceries', id: 2, name: 'Groceries', status: author$project$Main$Incomplete}
+			{description: 'Dog needs to be waled everyday', id: 2, name: 'Walk the Dog', status: author$project$Main$Incomplete},
+			{description: 'Must pick up groceries', id: 1, name: 'Groceries', status: author$project$Main$Incomplete}
 		])
 };
 var author$project$Main$Complete = {$: 'Complete'};
+var elm$core$Basics$neq = _Utils_notEqual;
 var elm$core$Basics$add = _Basics_add;
-var elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
-};
-var elm$core$Maybe$Nothing = {$: 'Nothing'};
-var elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(x);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
+var elm$core$Basics$gt = _Utils_gt;
 var elm$core$List$foldl = F3(
 	function (func, acc, list) {
 		foldl:
@@ -5006,24 +4995,6 @@ var elm$core$List$foldl = F3(
 var elm$core$List$reverse = function (list) {
 	return A3(elm$core$List$foldl, elm$core$List$cons, _List_Nil, list);
 };
-var author$project$Main$nextTaskId = function (tasks) {
-	var reveredTasks = elm$core$List$reverse(tasks);
-	var _n0 = elm$core$List$head(reveredTasks);
-	if (_n0.$ === 'Just') {
-		var lastTaskAdded = _n0.a;
-		return lastTaskAdded.id + 1;
-	} else {
-		return 0;
-	}
-};
-var elm$core$Basics$eq = _Utils_equal;
-var author$project$Main$updateTaskStatus = F3(
-	function (taskId, completionStatus, task) {
-		return _Utils_eq(taskId, task.id) ? _Utils_update(
-			task,
-			{status: completionStatus}) : task;
-	});
-var elm$core$Basics$gt = _Utils_gt;
 var elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -5079,6 +5050,55 @@ var elm$core$List$foldr = F3(
 	function (fn, acc, ls) {
 		return A4(elm$core$List$foldrHelper, fn, acc, 0, ls);
 	});
+var elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2(elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var author$project$Main$deleteTask = F2(
+	function (task, tasks) {
+		return A2(
+			elm$core$List$filter,
+			function (currentTask) {
+				return !_Utils_eq(currentTask.id, task.id);
+			},
+			tasks);
+	});
+var elm$core$Maybe$Just = function (a) {
+	return {$: 'Just', a: a};
+};
+var elm$core$Maybe$Nothing = {$: 'Nothing'};
+var elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(x);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var author$project$Main$nextTaskId = function (tasks) {
+	var _n0 = elm$core$List$head(tasks);
+	if (_n0.$ === 'Just') {
+		var lastTaskAdded = _n0.a;
+		return lastTaskAdded.id + 1;
+	} else {
+		return 0;
+	}
+};
+var elm$core$Basics$eq = _Utils_equal;
+var author$project$Main$updateTaskStatus = F3(
+	function (taskId, completionStatus, task) {
+		return _Utils_eq(taskId, task.id) ? _Utils_update(
+			task,
+			{status: completionStatus}) : task;
+	});
 var elm$core$List$map = F2(
 	function (f, xs) {
 		return A3(
@@ -5100,6 +5120,7 @@ var author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{
+						inputTaskName: '',
 						tasks: A2(
 							elm$core$List$cons,
 							{
@@ -5109,6 +5130,13 @@ var author$project$Main$update = F2(
 								status: author$project$Main$Incomplete
 							},
 							model.tasks)
+					});
+			case 'DeleteTask':
+				var task = msg.a;
+				return _Utils_update(
+					model,
+					{
+						tasks: A2(author$project$Main$deleteTask, task, model.tasks)
 					});
 			case 'CompleteTask':
 				var task = msg.a;
@@ -5140,6 +5168,9 @@ var author$project$Main$update = F2(
 var author$project$Main$AddTask = {$: 'AddTask'};
 var author$project$Main$UpdateInputTaskName = function (a) {
 	return {$: 'UpdateInputTaskName', a: a};
+};
+var author$project$Main$DeleteTask = function (a) {
+	return {$: 'DeleteTask', a: a};
 };
 var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$True = {$: 'True'};
@@ -5615,7 +5646,7 @@ var visotype$elm_dom$Dom$addAction = function (_n0) {
 				});
 		});
 };
-var author$project$Main$taskToggleButton = function (task) {
+var author$project$Main$taskToggleCompleteButton = function (task) {
 	return author$project$Main$taskComplete(task) ? A2(
 		visotype$elm_dom$Dom$addAction,
 		_Utils_Tuple2(
@@ -5830,9 +5861,37 @@ var author$project$Main$taskListElement = function (task) {
 		_List_fromArray(
 			[
 				author$project$Main$taskName(task),
-				author$project$Main$taskToggleButton(task)
+				author$project$Main$taskToggleCompleteButton(task),
+				A2(
+				visotype$elm_dom$Dom$addAction,
+				_Utils_Tuple2(
+					'click',
+					author$project$Main$DeleteTask(task)),
+				A2(
+					visotype$elm_dom$Dom$appendText,
+					'Delete',
+					visotype$elm_dom$Dom$element('button')))
 			]),
 		visotype$elm_dom$Dom$element('li'));
+};
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
+var visotype$elm_dom$Dom$addAttributeList = function (la) {
+	return visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					attributes: A2(elm$core$List$append, n.attributes, la)
+				});
+		});
 };
 var elm$json$Json$Decode$string = _Json_decodeString;
 var elm$json$Json$Decode$field = _Json_decodeField;
@@ -5896,7 +5955,14 @@ var author$project$Main$view = function (model) {
 							A2(
 							visotype$elm_dom$Dom$addInputHandler,
 							author$project$Main$UpdateInputTaskName,
-							visotype$elm_dom$Dom$element('input')),
+							A2(
+								visotype$elm_dom$Dom$addAttributeList,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$value(model.inputTaskName),
+										elm$html$Html$Attributes$placeholder('What needs to be done?')
+									]),
+								visotype$elm_dom$Dom$element('input'))),
 							A2(
 							visotype$elm_dom$Dom$addAction,
 							_Utils_Tuple2('click', author$project$Main$AddTask),
@@ -6147,13 +6213,6 @@ var elm$browser$Debugger$Overlay$viewProblemType = function (_n0) {
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$p = _VirtualDom_node('p');
 var elm$html$Html$ul = _VirtualDom_node('ul');
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
 var elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		elm$html$Html$Attributes$stringProperty,
@@ -9616,7 +9675,6 @@ var elm$browser$Debugger$Report$MessageChanged = F2(
 var elm$browser$Debugger$Report$SomethingChanged = function (a) {
 	return {$: 'SomethingChanged', a: a};
 };
-var elm$core$Basics$neq = _Utils_notEqual;
 var elm$browser$Debugger$Metadata$checkTypes = F2(
 	function (old, _new) {
 		return (!_Utils_eq(old.message, _new.message)) ? A2(elm$browser$Debugger$Report$MessageChanged, old.message, _new.message) : elm$browser$Debugger$Report$SomethingChanged(
@@ -10109,7 +10167,7 @@ var elm$browser$Browser$sandbox = function (impl) {
 var author$project$Main$main = elm$browser$Browser$sandbox(
 	{init: author$project$Main$initialModel, update: author$project$Main$update, view: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
-	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : String.String, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
+	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : String.String, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"DeleteTask":["Main.Task"],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
 
 var app = Elm.Main.init({ node: document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49") });
 if (document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49"))
