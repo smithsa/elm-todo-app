@@ -275,31 +275,33 @@ taskListElement task =
 
 taskDescriptionElement : Task -> Element Msg
 taskDescriptionElement task =
-    case task.description of
-        NotEditing val ->
-            element "div"
-                |> addClass "description"
-                |> appendText val
-                |> addAction ( "click", TriggerDescriptionEdit task )
+    if (not <| taskComplete task) then
+        case task.description of
+            NotEditing val ->
+                element "div"
+                    |> addClass "description"
+                    |> appendText val
+                    |> addAction ( "click", TriggerDescriptionEdit task )
 
-        Editing _ bufferVal ->
+            Editing _ bufferVal ->
+                element "div"
+                    |> appendChildList
+                        [ element "input"
+                            |> addInputHandler (UpdateTaskDescriptionBuffer task)
+                            |> addClass "description"
+                            |> addAttributeList
+                                [ Html.Attributes.value bufferVal
+                                , Html.Attributes.contenteditable True
+                                ]
+                        , element "button"
+                            |> appendText "Save"
+                            |> addAction ( "click", EditDescription task )
+                        , element "button"
+                            |> appendText "Cancel"
+                            |> addAction ( "click", CancelEditDescription task )
+                        ]
+        else
             element "div"
-                |> appendChildList
-                    [ element "input"
-                        |> addInputHandler (UpdateTaskDescriptionBuffer task)
-                        |> addClass "description"
-                        |> addAttributeList
-                            [ Html.Attributes.value bufferVal
-                            , Html.Attributes.contenteditable True
-                            ]
-                    , element "button"
-                        |> appendText "Save"
-                        |> addAction ( "click", EditDescription task )
-                    , element "button"
-                        |> appendText "Cancel"
-                        |> addAction ( "click", CancelEditDescription task )
-                    ]
-
 
 taskFilterElements : Element Msg
 taskFilterElements =

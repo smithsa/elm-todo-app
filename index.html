@@ -6017,6 +6017,10 @@ var author$project$Main$UpdateTaskDescriptionBuffer = F2(
 	function (a, b) {
 		return {$: 'UpdateTaskDescriptionBuffer', a: a, b: b};
 	});
+var author$project$Main$taskComplete = function (task) {
+	return _Utils_eq(task.status, author$project$Main$Complete) ? true : false;
+};
+var elm$core$Basics$not = _Basics_not;
 var elm$json$Json$Encode$bool = _Json_wrap;
 var elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
@@ -6107,65 +6111,66 @@ var visotype$elm_dom$Dom$addInputHandler = function (token) {
 		});
 };
 var author$project$Main$taskDescriptionElement = function (task) {
-	var _n0 = task.description;
-	if (_n0.$ === 'NotEditing') {
-		var val = _n0.a;
-		return A2(
-			visotype$elm_dom$Dom$addAction,
-			_Utils_Tuple2(
-				'click',
-				author$project$Main$TriggerDescriptionEdit(task)),
-			A2(
-				visotype$elm_dom$Dom$appendText,
-				val,
+	if (!author$project$Main$taskComplete(task)) {
+		var _n0 = task.description;
+		if (_n0.$ === 'NotEditing') {
+			var val = _n0.a;
+			return A2(
+				visotype$elm_dom$Dom$addAction,
+				_Utils_Tuple2(
+					'click',
+					author$project$Main$TriggerDescriptionEdit(task)),
 				A2(
-					visotype$elm_dom$Dom$addClass,
-					'description',
-					visotype$elm_dom$Dom$element('div'))));
-	} else {
-		var bufferVal = _n0.b;
-		return A2(
-			visotype$elm_dom$Dom$appendChildList,
-			_List_fromArray(
-				[
-					A2(
-					visotype$elm_dom$Dom$addAttributeList,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$value(bufferVal),
-							elm$html$Html$Attributes$contenteditable(true)
-						]),
+					visotype$elm_dom$Dom$appendText,
+					val,
 					A2(
 						visotype$elm_dom$Dom$addClass,
 						'description',
+						visotype$elm_dom$Dom$element('div'))));
+		} else {
+			var bufferVal = _n0.b;
+			return A2(
+				visotype$elm_dom$Dom$appendChildList,
+				_List_fromArray(
+					[
 						A2(
-							visotype$elm_dom$Dom$addInputHandler,
-							author$project$Main$UpdateTaskDescriptionBuffer(task),
-							visotype$elm_dom$Dom$element('input')))),
-					A2(
-					visotype$elm_dom$Dom$addAction,
-					_Utils_Tuple2(
-						'click',
-						author$project$Main$EditDescription(task)),
-					A2(
-						visotype$elm_dom$Dom$appendText,
-						'Save',
-						visotype$elm_dom$Dom$element('button'))),
-					A2(
-					visotype$elm_dom$Dom$addAction,
-					_Utils_Tuple2(
-						'click',
-						author$project$Main$CancelEditDescription(task)),
-					A2(
-						visotype$elm_dom$Dom$appendText,
-						'Cancel',
-						visotype$elm_dom$Dom$element('button')))
-				]),
-			visotype$elm_dom$Dom$element('div'));
+						visotype$elm_dom$Dom$addAttributeList,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$value(bufferVal),
+								elm$html$Html$Attributes$contenteditable(true)
+							]),
+						A2(
+							visotype$elm_dom$Dom$addClass,
+							'description',
+							A2(
+								visotype$elm_dom$Dom$addInputHandler,
+								author$project$Main$UpdateTaskDescriptionBuffer(task),
+								visotype$elm_dom$Dom$element('input')))),
+						A2(
+						visotype$elm_dom$Dom$addAction,
+						_Utils_Tuple2(
+							'click',
+							author$project$Main$EditDescription(task)),
+						A2(
+							visotype$elm_dom$Dom$appendText,
+							'Save',
+							visotype$elm_dom$Dom$element('button'))),
+						A2(
+						visotype$elm_dom$Dom$addAction,
+						_Utils_Tuple2(
+							'click',
+							author$project$Main$CancelEditDescription(task)),
+						A2(
+							visotype$elm_dom$Dom$appendText,
+							'Cancel',
+							visotype$elm_dom$Dom$element('button')))
+					]),
+				visotype$elm_dom$Dom$element('div'));
+		}
+	} else {
+		return visotype$elm_dom$Dom$element('div');
 	}
-};
-var author$project$Main$taskComplete = function (task) {
-	return _Utils_eq(task.status, author$project$Main$Complete) ? true : false;
 };
 var visotype$elm_dom$Dom$addStyle = function (kv) {
 	return visotype$elm_dom$Dom$Internal$modify(
@@ -8795,7 +8800,6 @@ var elm$browser$Debugger$Expando$updateIndex = F3(
 				A3(elm$browser$Debugger$Expando$updateIndex, n - 1, func, xs));
 		}
 	});
-var elm$core$Basics$not = _Basics_not;
 var elm$core$Dict$getMin = function (dict) {
 	getMin:
 	while (true) {
