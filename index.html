@@ -4984,6 +4984,25 @@ var author$project$Main$initialModel = {
 		])
 };
 var author$project$Main$Complete = {$: 'Complete'};
+var elm$core$Basics$eq = _Utils_equal;
+var author$project$Main$cancelEditDescription = F2(
+	function (taskId, task) {
+		if (_Utils_eq(taskId, task.id)) {
+			var _n0 = task.description;
+			if (_n0.$ === 'Editing') {
+				var val = _n0.a;
+				return _Utils_update(
+					task,
+					{
+						description: author$project$Main$NotEditing(val)
+					});
+			} else {
+				return task;
+			}
+		} else {
+			return task;
+		}
+	});
 var elm$core$Basics$neq = _Utils_notEqual;
 var elm$core$Basics$add = _Basics_add;
 var elm$core$Basics$gt = _Utils_gt;
@@ -5084,7 +5103,6 @@ var author$project$Main$deleteTask = F2(
 			},
 			tasks);
 	});
-var elm$core$Basics$eq = _Utils_equal;
 var author$project$Main$editDescription = F2(
 	function (taskId, task) {
 		if (_Utils_eq(taskId, task.id)) {
@@ -5270,7 +5288,7 @@ var author$project$Main$update = F2(
 							author$project$Main$editDescription(task.id),
 							model.tasks)
 					});
-			default:
+			case 'UpdateTaskDescriptionBuffer':
 				var task = msg.a;
 				var val = msg.b;
 				return _Utils_update(
@@ -5281,6 +5299,16 @@ var author$project$Main$update = F2(
 							A2(author$project$Main$updateTaskDescriptionBuffer, task.id, val),
 							model.tasks)
 					});
+			default:
+				var task = msg.a;
+				return _Utils_update(
+					model,
+					{
+						tasks: A2(
+							elm$core$List$map,
+							author$project$Main$cancelEditDescription(task.id),
+							model.tasks)
+					});
 		}
 	});
 var author$project$Main$AddTask = {$: 'AddTask'};
@@ -5289,6 +5317,9 @@ var author$project$Main$UpdateInputTaskName = function (a) {
 };
 var author$project$Main$DeleteTask = function (a) {
 	return {$: 'DeleteTask', a: a};
+};
+var author$project$Main$CancelEditDescription = function (a) {
+	return {$: 'CancelEditDescription', a: a};
 };
 var author$project$Main$EditDescription = function (a) {
 	return {$: 'EditDescription', a: a};
@@ -6055,6 +6086,15 @@ var author$project$Main$taskDescriptionElement = function (task) {
 					A2(
 						visotype$elm_dom$Dom$appendText,
 						'Save',
+						visotype$elm_dom$Dom$element('button'))),
+					A2(
+					visotype$elm_dom$Dom$addAction,
+					_Utils_Tuple2(
+						'click',
+						author$project$Main$CancelEditDescription(task)),
+					A2(
+						visotype$elm_dom$Dom$appendText,
+						'Cancel',
 						visotype$elm_dom$Dom$element('button')))
 				]),
 			visotype$elm_dom$Dom$element('div'));
@@ -10369,7 +10409,7 @@ var elm$browser$Browser$sandbox = function (impl) {
 var author$project$Main$main = elm$browser$Browser$sandbox(
 	{init: author$project$Main$initialModel, update: author$project$Main$update, view: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
-	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : Main.EditableString, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"DeleteTask":["Main.Task"],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"],"TriggerDescriptionEdit":["Main.Task"],"EditDescription":["Main.Task"],"UpdateTaskDescriptionBuffer":["Main.Task","String.String"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Main.EditableString":{"args":[],"tags":{"NotEditing":["String.String"],"Editing":["String.String","String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
+	elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.0"},"types":{"message":"Main.Msg","aliases":{"Main.Task":{"args":[],"type":"{ id : Basics.Int, name : String.String, description : Main.EditableString, status : Main.CompletionStatus }"}},"unions":{"Main.Msg":{"args":[],"tags":{"AddTask":[],"DeleteTask":["Main.Task"],"CompleteTask":["Main.Task"],"UndoTaskCompletion":["Main.Task"],"UpdateInputTaskName":["String.String"],"TriggerDescriptionEdit":["Main.Task"],"EditDescription":["Main.Task"],"UpdateTaskDescriptionBuffer":["Main.Task","String.String"],"CancelEditDescription":["Main.Task"]}},"Main.CompletionStatus":{"args":[],"tags":{"Complete":[],"Incomplete":[]}},"Main.EditableString":{"args":[],"tags":{"NotEditing":["String.String"],"Editing":["String.String","String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
 
 var app = Elm.Main.init({ node: document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49") });
 if (document.getElementById("elm-f0111bc4e658d0f98db96260c16f7e49"))

@@ -49,6 +49,7 @@ type Msg
     | TriggerDescriptionEdit Task
     | EditDescription Task
     | UpdateTaskDescriptionBuffer Task String
+    | CancelEditDescription Task
 
 
 update : Msg -> Model -> Model
@@ -95,6 +96,11 @@ update msg model =
                 | tasks = List.map (updateTaskDescriptionBuffer task.id val) model.tasks
             }
 
+        CancelEditDescription task ->
+            { model
+                | tasks = List.map (cancelEditDescription task.id) model.tasks
+            }
+
 
 updateTaskStatus : Int -> CompletionStatus -> Task -> Task
 updateTaskStatus taskId completionStatus task =
@@ -139,6 +145,19 @@ updateTaskDescriptionBuffer taskId inputVal task =
         case task.description of
             Editing val _ ->
                 { task | description = Editing val inputVal }
+
+            NotEditing _ ->
+                task
+
+    else
+        task
+
+cancelEditDescription : Int -> Task -> Task
+cancelEditDescription taskId task =
+    if taskId == task.id then
+        case task.description of
+            Editing val _ ->
+                { task | description = NotEditing val }
 
             NotEditing _ ->
                 task
@@ -246,6 +265,9 @@ taskDescriptionElement task =
                     , element "button"
                         |> appendText "Save"
                         |> addAction ( "click", EditDescription task )
+                        , element "button"
+                        |> appendText "Cancel"
+                        |> addAction ( "click", CancelEditDescription task )
                     ]
 
 
