@@ -4,14 +4,16 @@
   <meta charset="UTF-8">
   <title>Main</title>
   <link rel="stylesheet" href="style.css">
-  <script src="main.js"></script>
+  <script src="elm.js"></script>
 </head>
 
 <body>
 <div id="elm"></div>
 <script>
+  var tasks = localStorage.getItem('elm-todo-tasks') || [];
   var app = Elm.Main.init({
-    node: document.getElementById('elm')
+    node: document.getElementById('elm'), //todo put localstorage here
+    flags: {tasks : tasks}
   });
 </script>
 </body>

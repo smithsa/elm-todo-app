@@ -4311,10 +4311,31 @@ function _Browser_load(url)
 	}));
 }
 var author$project$Main$AllTasks = {$: 'AllTasks'};
+var author$project$Main$Task = F4(
+	function (id, name, description, status) {
+		return {description: description, id: id, name: name, status: status};
+	});
+var author$project$Main$Complete = {$: 'Complete'};
 var author$project$Main$Incomplete = {$: 'Incomplete'};
-var author$project$Main$NotEditing = function (a) {
-	return {$: 'NotEditing', a: a};
+var author$project$Main$completionStatusFromString = function (completionStatusString) {
+	switch (completionStatusString) {
+		case 'complete':
+			return author$project$Main$Complete;
+		case 'incomplete':
+			return author$project$Main$Incomplete;
+		default:
+			return author$project$Main$Incomplete;
+	}
 };
+var elm$core$Basics$apR = F2(
+	function (x, f) {
+		return f(x);
+	});
+var elm$core$Array$branchFactor = 32;
+var elm$core$Array$Array_elm_builtin = F4(
+	function (a, b, c, d) {
+		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
+	});
 var elm$core$Basics$EQ = {$: 'EQ'};
 var elm$core$Basics$GT = {$: 'GT'};
 var elm$core$Basics$LT = {$: 'LT'};
@@ -4395,21 +4416,6 @@ var elm$core$Array$foldr = F3(
 var elm$core$Array$toList = function (array) {
 	return A3(elm$core$Array$foldr, elm$core$List$cons, _List_Nil, array);
 };
-var elm$core$Debug$log = _Debug_log;
-var elm$core$Basics$False = {$: 'False'};
-var elm$core$Basics$True = {$: 'True'};
-var elm$core$Result$isOk = function (result) {
-	if (result.$ === 'Ok') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var elm$core$Array$branchFactor = 32;
-var elm$core$Array$Array_elm_builtin = F4(
-	function (a, b, c, d) {
-		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
-	});
 var elm$core$Basics$ceiling = _Basics_ceiling;
 var elm$core$Basics$fdiv = _Basics_fdiv;
 var elm$core$Basics$logBase = F2(
@@ -4472,10 +4478,6 @@ var elm$core$Array$compressNodes = F2(
 			}
 		}
 	});
-var elm$core$Basics$apR = F2(
-	function (x, f) {
-		return f(x);
-	});
 var elm$core$Basics$eq = _Utils_equal;
 var elm$core$Tuple$first = function (_n0) {
 	var x = _n0.a;
@@ -4534,6 +4536,7 @@ var elm$core$Array$builderToArray = F2(
 				builder.tail);
 		}
 	});
+var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$idiv = _Basics_idiv;
 var elm$core$Basics$lt = _Utils_lt;
 var elm$core$Elm$JsArray$initialize = _JsArray_initialize;
@@ -4585,6 +4588,14 @@ var elm$core$Result$Err = function (a) {
 };
 var elm$core$Result$Ok = function (a) {
 	return {$: 'Ok', a: a};
+};
+var elm$core$Basics$True = {$: 'True'};
+var elm$core$Result$isOk = function (result) {
+	if (result.$ === 'Ok') {
+		return true;
+	} else {
+		return false;
+	}
 };
 var elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
@@ -4791,34 +4802,44 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
+var elm$json$Json$Decode$map = _Json_map1;
+var elm$json$Json$Decode$string = _Json_decodeString;
+var author$project$Main$completionStatusDecoder = A2(elm$json$Json$Decode$map, author$project$Main$completionStatusFromString, elm$json$Json$Decode$string);
+var author$project$Main$NotEditing = function (a) {
+	return {$: 'NotEditing', a: a};
+};
+var author$project$Main$editableStringDecoder = A2(elm$json$Json$Decode$map, author$project$Main$NotEditing, elm$json$Json$Decode$string);
+var elm$json$Json$Decode$field = _Json_decodeField;
+var elm$json$Json$Decode$int = _Json_decodeInt;
+var elm$json$Json$Decode$map4 = _Json_map4;
+var author$project$Main$taskDecoder = A5(
+	elm$json$Json$Decode$map4,
+	author$project$Main$Task,
+	A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
+	A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'description', author$project$Main$editableStringDecoder),
+	A2(elm$json$Json$Decode$field, 'status', author$project$Main$completionStatusDecoder));
+var elm$json$Json$Decode$list = _Json_decodeList;
+var author$project$Main$tasksDecoders = elm$json$Json$Decode$list(author$project$Main$taskDecoder);
+var elm$core$Debug$log = _Debug_log;
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var elm$json$Json$Decode$decodeValue = _Json_run;
 var author$project$Main$initialModel = function (flags) {
-	var _n0 = A2(elm$core$Debug$log, 'flags', flags);
-	return _Utils_Tuple2(
-		{
-			editableDescriptionValue: '',
-			inputTaskName: '',
-			tasks: _List_fromArray(
-				[
-					{
-					description: author$project$Main$NotEditing('Dog needs to be waled everyday'),
-					id: 2,
-					name: 'Walk the Dog',
-					status: author$project$Main$Incomplete
-				},
-					{
-					description: author$project$Main$NotEditing('Must pick up groceries'),
-					id: 1,
-					name: 'Groceries',
-					status: author$project$Main$Incomplete
-				}
-				]),
-			visibleTasks: author$project$Main$AllTasks
-		},
-		elm$core$Platform$Cmd$none);
+	var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$tasksDecoders, flags.tasks);
+	if (_n0.$ === 'Ok') {
+		var tasks = _n0.a;
+		return _Utils_Tuple2(
+			{inputTaskName: '', tasks: tasks, visibleTasks: author$project$Main$AllTasks},
+			elm$core$Platform$Cmd$none);
+	} else {
+		var err = _n0.a;
+		var _n1 = A2(elm$core$Debug$log, 'flags', err);
+		return _Utils_Tuple2(
+			{inputTaskName: '', tasks: _List_Nil, visibleTasks: author$project$Main$AllTasks},
+			elm$core$Platform$Cmd$none);
+	}
 };
-var author$project$Main$Complete = {$: 'Complete'};
 var author$project$Main$cancelEditDescription = F2(
 	function (taskId, task) {
 		if (_Utils_eq(taskId, task.id)) {
@@ -5240,7 +5261,6 @@ var elm$core$Tuple$pair = F2(
 		return _Utils_Tuple2(a, b);
 	});
 var elm$json$Json$Encode$string = _Json_wrap;
-var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	switch (handler.$) {
@@ -5523,8 +5543,6 @@ var visotype$elm_dom$Dom$addAttributeList = function (la) {
 				});
 		});
 };
-var elm$json$Json$Decode$string = _Json_decodeString;
-var elm$json$Json$Decode$field = _Json_decodeField;
 var elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
@@ -5635,7 +5653,7 @@ var author$project$Main$taskDescriptionElement = function (task) {
 					]),
 				A2(
 					visotype$elm_dom$Dom$addClass,
-					'description',
+					'description-container',
 					visotype$elm_dom$Dom$element('div')));
 		}
 	} else {
@@ -6009,7 +6027,7 @@ var elm$browser$Browser$document = _Browser_document;
 var elm$core$Platform$Sub$batch = _Platform_batch;
 var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var elm$json$Json$Decode$andThen = _Json_andThen;
-var elm$json$Json$Decode$int = _Json_decodeInt;
+var elm$json$Json$Decode$value = _Json_decodeValue;
 var author$project$Main$main = elm$browser$Browser$document(
 	{
 		init: author$project$Main$initialModel,
@@ -6030,8 +6048,8 @@ var author$project$Main$main = elm$browser$Browser$document(
 _Platform_export({'Main':{'init':author$project$Main$main(
 	A2(
 		elm$json$Json$Decode$andThen,
-		function (taskCount) {
+		function (tasks) {
 			return elm$json$Json$Decode$succeed(
-				{taskCount: taskCount});
+				{tasks: tasks});
 		},
-		A2(elm$json$Json$Decode$field, 'taskCount', elm$json$Json$Decode$int)))(0)}});}(this));
+		A2(elm$json$Json$Decode$field, 'tasks', elm$json$Json$Decode$value)))(0)}});}(this));

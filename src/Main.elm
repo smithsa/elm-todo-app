@@ -6,7 +6,7 @@ import Html exposing (Html)
 import Html.Attributes exposing (placeholder, value)
 import List
 import Maybe.Extra
-import Json.Decode as Json
+import Json.Decode
 
 type alias Task =
     { id : Int, name : String, description : EditableString, status : CompletionStatus }
@@ -32,25 +32,59 @@ type alias Model =
     { tasks : List Task
     , inputTaskName : String
     , visibleTasks : VisibleTasks
-    , editableDescriptionValue : String
     }
 
+tasksDecoders : Json.Decode.Decoder (List Task)
+tasksDecoders =
+    Json.Decode.list taskDecoder
+
+taskDecoder : Json.Decode.Decoder Task
+taskDecoder =
+    Json.Decode.map4 Task
+        (Json.Decode.field "id" Json.Decode.int)
+        (Json.Decode.field "name" Json.Decode.string)
+        (Json.Decode.field "description" editableStringDecoder)
+        (Json.Decode.field "status" completionStatusDecoder)
+
+editableStringDecoder : Json.Decode.Decoder EditableString
+editableStringDecoder =
+    Json.Decode.string
+        |> Json.Decode.map NotEditing
+
+completionStatusDecoder : Json.Decode.Decoder CompletionStatus
+completionStatusDecoder =
+    Json.Decode.string
+        |> Json.Decode.map completionStatusFromString
+
+completionStatusFromString : String -> CompletionStatus
+completionStatusFromString completionStatusString =
+    case completionStatusString of
+        "complete" ->
+            Complete
+
+        "incomplete" ->
+            Incomplete
+        _ ->
+            Incomplete
 
 initialModel : Flags -> (Model, Cmd Msg)
 initialModel flags =
-    let
-        _ = Debug.log "flags" flags
-    in
-        ({ tasks =
-            [ { id = 2, name = "Walk the Dog", description = NotEditing "Dog needs to be waled everyday", status = Incomplete }
-            , { id = 1, name = "Groceries", description = NotEditing "Must pick up groceries", status = Incomplete }
-            ]
-        , inputTaskName = ""
-        , visibleTasks = AllTasks
-        , editableDescriptionValue = ""
-        }
-        , Cmd.none)
-
+    case Json.Decode.decodeValue tasksDecoders flags.tasks of
+        Ok tasks ->
+            ({ tasks = tasks
+            , inputTaskName = ""
+            , visibleTasks = AllTasks
+            }
+            , Cmd.none)
+        Err err ->
+            let
+                _ = Debug.log "flags" err
+            in
+                ({ tasks = []
+                , inputTaskName = ""
+                , visibleTasks = AllTasks
+                }
+                , Cmd.none)
 
 type Msg
     = AddTask
@@ -296,7 +330,7 @@ taskDescriptionElement task =
 
             Editing _ bufferVal ->
                 element "div"
-                    |> addClass "description"
+                    |> addClass "description-container"
                     |> appendChildList
                         [ element "input"
                             |> addInputHandler (UpdateTaskDescriptionBuffer task.id)
@@ -337,7 +371,7 @@ taskFilterElements =
 
 type alias Flags =
     {
-        taskCount : Int
+        tasks :  Json.Decode.Value
     }
 
 main : Program Flags Model Msg
