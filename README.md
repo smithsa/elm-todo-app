@@ -1,6 +1,6 @@
 # Elm Todo App
 
-A basic todo app built in elm. The app demonstrates knowledge of pipelines, the visotype/elm-dom Dom builder library, types, ports, decoders, encoders, state managment, using local storage for memory persistence and the Elm Architecture.
+A basic todo app built in elm. The app demonstrates knowledge of pipelines, the visotype/elm-dom Dom builder library, types, ports, decoders, encoders, state managment, using local storage for memory persistence, and Elm Architecture.
 
 <img src="https://user-images.githubusercontent.com/1827606/60203563-8766b800-9812-11e9-9292-6337a0a82b26.png" />
 
