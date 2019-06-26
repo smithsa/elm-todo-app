@@ -107,6 +107,7 @@
         border: none;
         padding: 5px 10px;
         width: 330px;
+        font-size: 14px;
     }
     .description-container{
         word-break: break-word;

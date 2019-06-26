@@ -7,32 +7,16 @@ import Html.Attributes exposing (placeholder, value)
 import List
 import Maybe.Extra
 import Json.Decode
-
-type alias Task =
-    { id : Int, name : String, description : EditableString, status : CompletionStatus }
-
-
-type CompletionStatus
-    = Complete
-    | Incomplete
-
-
-type EditableString
-    = NotEditing String
-    | Editing String String
-
-
-type VisibleTasks
-    = AllTasks
-    | CompleteTasks
-    | IncompleteTasks
-
+import Json.Encode
+import Ports
+import Types exposing (..)
 
 type alias Model =
     { tasks : List Task
     , inputTaskName : String
     , visibleTasks : VisibleTasks
     }
+
 
 tasksDecoders : Json.Decode.Decoder (List Task)
 tasksDecoders =
@@ -67,24 +51,60 @@ completionStatusFromString completionStatusString =
         _ ->
             Incomplete
 
+tasksEncoder : List Task -> Json.Encode.Value
+tasksEncoder tasks =
+     Json.Encode.list taskEncoder tasks
+
+
+taskEncoder: Task -> Json.Encode.Value
+taskEncoder task =
+    Json.Encode.object
+        [ ( "id",  Json.Encode.int task.id)
+        , ( "name", Json.Encode.string task.name)
+        , ( "description", editableStringEncoder task.description)
+        , ( "status", completionStatusEncoder task.status)
+        ]
+
+editableStringEncoder : EditableString -> Json.Encode.Value
+editableStringEncoder editableString =
+    case editableString of
+        Editing val bufferVal ->
+            Json.Encode.string val
+
+        NotEditing val ->
+            Json.Encode.string val
+
+
+completionStatusEncoder : CompletionStatus -> Json.Encode.Value
+completionStatusEncoder completionStatus =
+    case completionStatus of
+        Complete ->
+            Json.Encode.string "complete"
+
+        Incomplete ->
+            Json.Encode.string "incomplete"
+
 initialModel : Flags -> (Model, Cmd Msg)
 initialModel flags =
-    case Json.Decode.decodeValue tasksDecoders flags.tasks of
-        Ok tasks ->
-            ({ tasks = tasks
-            , inputTaskName = ""
-            , visibleTasks = AllTasks
-            }
-            , Cmd.none)
-        Err err ->
-            let
-                _ = Debug.log "flags" err
-            in
-                ({ tasks = []
+    let
+        _ = Debug.log "flags" flags.tasks
+    in
+        case Json.Decode.decodeValue tasksDecoders flags.tasks of
+            Ok tasks ->
+                ({ tasks = tasks
                 , inputTaskName = ""
                 , visibleTasks = AllTasks
                 }
                 , Cmd.none)
+            Err err ->
+                let
+                    _ = Debug.log "error" err
+                in
+                    ({ tasks = []
+                    , inputTaskName = ""
+                    , visibleTasks = AllTasks
+                    }
+                    , Cmd.none)
 
 type Msg
     = AddTask
@@ -98,6 +118,20 @@ type Msg
     | CancelEditDescription Int
     | UpdateVisibleTasks VisibleTasks
 
+
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg model =
+    let
+        ( newModel, commands ) =
+            update msg model
+
+        extractedTasks =
+            tasksEncoder newModel.tasks
+
+    in
+        ( newModel
+        , Cmd.batch [ commands, Ports.storeTasks extractedTasks ]
+        )
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -338,6 +372,7 @@ taskDescriptionElement task =
                             |> addAttributeList
                                 [ Html.Attributes.value bufferVal
                                 , Html.Attributes.contenteditable True
+                                , Html.Attributes.autofocus True
                                 ]
                         , element "button"
                             |> appendText "Save"
@@ -369,16 +404,13 @@ taskFilterElements =
                 |> addAction ( "click", UpdateVisibleTasks IncompleteTasks )
             ]
 
-type alias Flags =
-    {
-        tasks :  Json.Decode.Value
-    }
+
 
 main : Program Flags Model Msg
 main =
     Browser.document
         { init = initialModel
         , view = \model -> { title = "Elm Todo App", body = [view model] }
-        , update = update
+        , update = updateWithStorage
         , subscriptions = \_ -> Sub.none
         }

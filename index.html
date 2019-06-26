@@ -10,11 +10,17 @@
 <body>
 <div id="elm"></div>
 <script>
-  var tasks = localStorage.getItem('elm-todo-tasks') || [];
+  var tasks = JSON.parse(localStorage.getItem('elm-todo-tasks')) || [];
   var app = Elm.Main.init({
-    node: document.getElementById('elm'), //todo put localstorage here
+    node: document.getElementById('elm'),
     flags: {tasks : tasks}
   });
+
+
+  app.ports.storeTasks.subscribe(function (tasks) {
+      localStorage.setItem('elm-todo-tasks', JSON.stringify(tasks));
+  });
+
 </script>
 </body>
 </html>

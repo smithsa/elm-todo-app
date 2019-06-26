@@ -4310,21 +4310,16 @@ function _Browser_load(url)
 		}
 	}));
 }
-var author$project$Main$AllTasks = {$: 'AllTasks'};
-var author$project$Main$Task = F4(
-	function (id, name, description, status) {
-		return {description: description, id: id, name: name, status: status};
-	});
-var author$project$Main$Complete = {$: 'Complete'};
-var author$project$Main$Incomplete = {$: 'Incomplete'};
+var author$project$Types$Complete = {$: 'Complete'};
+var author$project$Types$Incomplete = {$: 'Incomplete'};
 var author$project$Main$completionStatusFromString = function (completionStatusString) {
 	switch (completionStatusString) {
 		case 'complete':
-			return author$project$Main$Complete;
+			return author$project$Types$Complete;
 		case 'incomplete':
-			return author$project$Main$Incomplete;
+			return author$project$Types$Incomplete;
 		default:
-			return author$project$Main$Incomplete;
+			return author$project$Types$Incomplete;
 	}
 };
 var elm$core$Basics$apR = F2(
@@ -4805,40 +4800,108 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$string = _Json_decodeString;
 var author$project$Main$completionStatusDecoder = A2(elm$json$Json$Decode$map, author$project$Main$completionStatusFromString, elm$json$Json$Decode$string);
-var author$project$Main$NotEditing = function (a) {
+var author$project$Types$NotEditing = function (a) {
 	return {$: 'NotEditing', a: a};
 };
-var author$project$Main$editableStringDecoder = A2(elm$json$Json$Decode$map, author$project$Main$NotEditing, elm$json$Json$Decode$string);
+var author$project$Main$editableStringDecoder = A2(elm$json$Json$Decode$map, author$project$Types$NotEditing, elm$json$Json$Decode$string);
+var author$project$Types$Task = F4(
+	function (id, name, description, status) {
+		return {description: description, id: id, name: name, status: status};
+	});
 var elm$json$Json$Decode$field = _Json_decodeField;
 var elm$json$Json$Decode$int = _Json_decodeInt;
 var elm$json$Json$Decode$map4 = _Json_map4;
 var author$project$Main$taskDecoder = A5(
 	elm$json$Json$Decode$map4,
-	author$project$Main$Task,
+	author$project$Types$Task,
 	A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
 	A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
 	A2(elm$json$Json$Decode$field, 'description', author$project$Main$editableStringDecoder),
 	A2(elm$json$Json$Decode$field, 'status', author$project$Main$completionStatusDecoder));
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Main$tasksDecoders = elm$json$Json$Decode$list(author$project$Main$taskDecoder);
+var author$project$Types$AllTasks = {$: 'AllTasks'};
 var elm$core$Debug$log = _Debug_log;
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var elm$json$Json$Decode$decodeValue = _Json_run;
 var author$project$Main$initialModel = function (flags) {
-	var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$tasksDecoders, flags.tasks);
-	if (_n0.$ === 'Ok') {
-		var tasks = _n0.a;
+	var _n0 = A2(elm$core$Debug$log, 'flags', flags.tasks);
+	var _n1 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$tasksDecoders, flags.tasks);
+	if (_n1.$ === 'Ok') {
+		var tasks = _n1.a;
 		return _Utils_Tuple2(
-			{inputTaskName: '', tasks: tasks, visibleTasks: author$project$Main$AllTasks},
+			{inputTaskName: '', tasks: tasks, visibleTasks: author$project$Types$AllTasks},
 			elm$core$Platform$Cmd$none);
 	} else {
-		var err = _n0.a;
-		var _n1 = A2(elm$core$Debug$log, 'flags', err);
+		var err = _n1.a;
+		var _n2 = A2(elm$core$Debug$log, 'error', err);
 		return _Utils_Tuple2(
-			{inputTaskName: '', tasks: _List_Nil, visibleTasks: author$project$Main$AllTasks},
+			{inputTaskName: '', tasks: _List_Nil, visibleTasks: author$project$Types$AllTasks},
 			elm$core$Platform$Cmd$none);
 	}
+};
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Main$completionStatusEncoder = function (completionStatus) {
+	if (completionStatus.$ === 'Complete') {
+		return elm$json$Json$Encode$string('complete');
+	} else {
+		return elm$json$Json$Encode$string('incomplete');
+	}
+};
+var author$project$Main$editableStringEncoder = function (editableString) {
+	if (editableString.$ === 'Editing') {
+		var val = editableString.a;
+		var bufferVal = editableString.b;
+		return elm$json$Json$Encode$string(val);
+	} else {
+		var val = editableString.a;
+		return elm$json$Json$Encode$string(val);
+	}
+};
+var elm$json$Json$Encode$int = _Json_wrap;
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var author$project$Main$taskEncoder = function (task) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				elm$json$Json$Encode$int(task.id)),
+				_Utils_Tuple2(
+				'name',
+				elm$json$Json$Encode$string(task.name)),
+				_Utils_Tuple2(
+				'description',
+				author$project$Main$editableStringEncoder(task.description)),
+				_Utils_Tuple2(
+				'status',
+				author$project$Main$completionStatusEncoder(task.status))
+			]));
+};
+var elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var author$project$Main$tasksEncoder = function (tasks) {
+	return A2(elm$json$Json$Encode$list, author$project$Main$taskEncoder, tasks);
 };
 var author$project$Main$cancelEditDescription = F2(
 	function (taskId, task) {
@@ -4849,7 +4912,7 @@ var author$project$Main$cancelEditDescription = F2(
 				return _Utils_update(
 					task,
 					{
-						description: author$project$Main$NotEditing(val)
+						description: author$project$Types$NotEditing(val)
 					});
 			} else {
 				return task;
@@ -4943,7 +5006,7 @@ var author$project$Main$editDescription = F2(
 				return _Utils_update(
 					task,
 					{
-						description: author$project$Main$NotEditing(bufferVal)
+						description: author$project$Types$NotEditing(bufferVal)
 					});
 			} else {
 				return task;
@@ -4979,7 +5042,7 @@ var author$project$Main$nextTaskId = function (tasks) {
 		},
 		elm$core$List$head(tasks));
 };
-var author$project$Main$Editing = F2(
+var author$project$Types$Editing = F2(
 	function (a, b) {
 		return {$: 'Editing', a: a, b: b};
 	});
@@ -4992,14 +5055,14 @@ var author$project$Main$triggerEditableDescription = F2(
 				return _Utils_update(
 					task,
 					{
-						description: author$project$Main$NotEditing(val)
+						description: author$project$Types$NotEditing(val)
 					});
 			} else {
 				var val = _n0.a;
 				return _Utils_update(
 					task,
 					{
-						description: A2(author$project$Main$Editing, val, val)
+						description: A2(author$project$Types$Editing, val, val)
 					});
 			}
 		} else {
@@ -5015,7 +5078,7 @@ var author$project$Main$updateTaskDescriptionBuffer = F3(
 				return _Utils_update(
 					task,
 					{
-						description: A2(author$project$Main$Editing, val, inputVal)
+						description: A2(author$project$Types$Editing, val, inputVal)
 					});
 			} else {
 				return task;
@@ -5056,10 +5119,10 @@ var author$project$Main$update = F2(
 							tasks: A2(
 								elm$core$List$cons,
 								{
-									description: author$project$Main$NotEditing(''),
+									description: author$project$Types$NotEditing(''),
 									id: author$project$Main$nextTaskId(model.tasks),
 									name: model.inputTaskName,
-									status: author$project$Main$Incomplete
+									status: author$project$Types$Incomplete
 								},
 								model.tasks)
 						}),
@@ -5081,7 +5144,7 @@ var author$project$Main$update = F2(
 						{
 							tasks: A2(
 								elm$core$List$map,
-								A2(author$project$Main$updateTaskStatus, taskId, author$project$Main$Complete),
+								A2(author$project$Main$updateTaskStatus, taskId, author$project$Types$Complete),
 								model.tasks)
 						}),
 					elm$core$Platform$Cmd$none);
@@ -5093,7 +5156,7 @@ var author$project$Main$update = F2(
 						{
 							tasks: A2(
 								elm$core$List$map,
-								A2(author$project$Main$updateTaskStatus, taskId, author$project$Main$Incomplete),
+								A2(author$project$Main$updateTaskStatus, taskId, author$project$Types$Incomplete),
 								model.tasks)
 						}),
 					elm$core$Platform$Cmd$none);
@@ -5162,6 +5225,25 @@ var author$project$Main$update = F2(
 					elm$core$Platform$Cmd$none);
 		}
 	});
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
+var author$project$Ports$storeTasks = _Platform_outgoingPort('storeTasks', elm$core$Basics$identity);
+var author$project$Main$updateWithStorage = F2(
+	function (msg, model) {
+		var _n0 = A2(author$project$Main$update, msg, model);
+		var newModel = _n0.a;
+		var commands = _n0.b;
+		var extractedTasks = author$project$Main$tasksEncoder(newModel.tasks);
+		return _Utils_Tuple2(
+			newModel,
+			elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[
+						commands,
+						author$project$Ports$storeTasks(extractedTasks)
+					])));
+	});
 var author$project$Main$AddTask = {$: 'AddTask'};
 var author$project$Main$UpdateInputTaskName = function (a) {
 	return {$: 'UpdateInputTaskName', a: a};
@@ -5175,23 +5257,23 @@ var author$project$Main$filteredTaskListElements = F2(
 				return A2(
 					elm$core$List$filter,
 					function (task) {
-						return _Utils_eq(task.status, author$project$Main$Complete);
+						return _Utils_eq(task.status, author$project$Types$Complete);
 					},
 					tasks);
 			default:
 				return A2(
 					elm$core$List$filter,
 					function (task) {
-						return _Utils_eq(task.status, author$project$Main$Incomplete);
+						return _Utils_eq(task.status, author$project$Types$Incomplete);
 					},
 					tasks);
 		}
 	});
-var author$project$Main$CompleteTasks = {$: 'CompleteTasks'};
-var author$project$Main$IncompleteTasks = {$: 'IncompleteTasks'};
 var author$project$Main$UpdateVisibleTasks = function (a) {
 	return {$: 'UpdateVisibleTasks', a: a};
 };
+var author$project$Types$CompleteTasks = {$: 'CompleteTasks'};
+var author$project$Types$IncompleteTasks = {$: 'IncompleteTasks'};
 var elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
@@ -5208,9 +5290,6 @@ var elm$core$List$append = F2(
 var elm$json$Json$Decode$succeed = _Json_succeed;
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
-};
-var elm$core$Basics$identity = function (x) {
-	return x;
 };
 var visotype$elm_dom$Dom$Internal$Element = function (a) {
 	return {$: 'Element', a: a};
@@ -5260,7 +5339,6 @@ var elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
 	});
-var elm$json$Json$Encode$string = _Json_wrap;
 var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	switch (handler.$) {
@@ -5468,7 +5546,7 @@ var author$project$Main$taskFilterElements = A2(
 			visotype$elm_dom$Dom$addAction,
 			_Utils_Tuple2(
 				'click',
-				author$project$Main$UpdateVisibleTasks(author$project$Main$AllTasks)),
+				author$project$Main$UpdateVisibleTasks(author$project$Types$AllTasks)),
 			A2(
 				visotype$elm_dom$Dom$appendText,
 				'All Tasks',
@@ -5477,7 +5555,7 @@ var author$project$Main$taskFilterElements = A2(
 			visotype$elm_dom$Dom$addAction,
 			_Utils_Tuple2(
 				'click',
-				author$project$Main$UpdateVisibleTasks(author$project$Main$CompleteTasks)),
+				author$project$Main$UpdateVisibleTasks(author$project$Types$CompleteTasks)),
 			A2(
 				visotype$elm_dom$Dom$appendText,
 				'Completed Tasks',
@@ -5486,7 +5564,7 @@ var author$project$Main$taskFilterElements = A2(
 			visotype$elm_dom$Dom$addAction,
 			_Utils_Tuple2(
 				'click',
-				author$project$Main$UpdateVisibleTasks(author$project$Main$IncompleteTasks)),
+				author$project$Main$UpdateVisibleTasks(author$project$Types$IncompleteTasks)),
 			A2(
 				visotype$elm_dom$Dom$appendText,
 				'Incomplete Tasks',
@@ -5513,7 +5591,7 @@ var author$project$Main$UpdateTaskDescriptionBuffer = F2(
 		return {$: 'UpdateTaskDescriptionBuffer', a: a, b: b};
 	});
 var author$project$Main$taskComplete = function (task) {
-	return _Utils_eq(task.status, author$project$Main$Complete) ? true : false;
+	return _Utils_eq(task.status, author$project$Types$Complete) ? true : false;
 };
 var elm$core$Basics$not = _Basics_not;
 var elm$json$Json$Encode$bool = _Json_wrap;
@@ -5524,6 +5602,7 @@ var elm$html$Html$Attributes$boolProperty = F2(
 			key,
 			elm$json$Json$Encode$bool(bool));
 	});
+var elm$html$Html$Attributes$autofocus = elm$html$Html$Attributes$boolProperty('autofocus');
 var elm$html$Html$Attributes$contenteditable = elm$html$Html$Attributes$boolProperty('contentEditable');
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5617,7 +5696,8 @@ var author$project$Main$taskDescriptionElement = function (task) {
 						_List_fromArray(
 							[
 								elm$html$Html$Attributes$value(bufferVal),
-								elm$html$Html$Attributes$contenteditable(true)
+								elm$html$Html$Attributes$contenteditable(true),
+								elm$html$Html$Attributes$autofocus(true)
 							]),
 						A2(
 							visotype$elm_dom$Dom$addClass,
@@ -6034,7 +6114,7 @@ var author$project$Main$main = elm$browser$Browser$document(
 		subscriptions: function (_n0) {
 			return elm$core$Platform$Sub$none;
 		},
-		update: author$project$Main$update,
+		update: author$project$Main$updateWithStorage,
 		view: function (model) {
 			return {
 				body: _List_fromArray(
