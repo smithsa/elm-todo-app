@@ -4821,21 +4821,18 @@ var author$project$Main$taskDecoder = A5(
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Main$tasksDecoders = elm$json$Json$Decode$list(author$project$Main$taskDecoder);
 var author$project$Types$AllTasks = {$: 'AllTasks'};
-var elm$core$Debug$log = _Debug_log;
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var elm$json$Json$Decode$decodeValue = _Json_run;
 var author$project$Main$initialModel = function (flags) {
-	var _n0 = A2(elm$core$Debug$log, 'flags', flags.tasks);
-	var _n1 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$tasksDecoders, flags.tasks);
-	if (_n1.$ === 'Ok') {
-		var tasks = _n1.a;
+	var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$tasksDecoders, flags.tasks);
+	if (_n0.$ === 'Ok') {
+		var tasks = _n0.a;
 		return _Utils_Tuple2(
 			{inputTaskName: '', tasks: tasks, visibleTasks: author$project$Types$AllTasks},
 			elm$core$Platform$Cmd$none);
 	} else {
-		var err = _n1.a;
-		var _n2 = A2(elm$core$Debug$log, 'error', err);
+		var err = _n0.a;
 		return _Utils_Tuple2(
 			{inputTaskName: '', tasks: _List_Nil, visibleTasks: author$project$Types$AllTasks},
 			elm$core$Platform$Cmd$none);

@@ -86,9 +86,6 @@ completionStatusEncoder completionStatus =
 
 initialModel : Flags -> (Model, Cmd Msg)
 initialModel flags =
-    let
-        _ = Debug.log "flags" flags.tasks
-    in
         case Json.Decode.decodeValue tasksDecoders flags.tasks of
             Ok tasks ->
                 ({ tasks = tasks
@@ -97,14 +94,11 @@ initialModel flags =
                 }
                 , Cmd.none)
             Err err ->
-                let
-                    _ = Debug.log "error" err
-                in
-                    ({ tasks = []
-                    , inputTaskName = ""
-                    , visibleTasks = AllTasks
-                    }
-                    , Cmd.none)
+                ({ tasks = []
+                , inputTaskName = ""
+                , visibleTasks = AllTasks
+                }
+                , Cmd.none)
 
 type Msg
     = AddTask
