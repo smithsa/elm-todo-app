@@ -6,7 +6,7 @@ import Html exposing (Html)
 import Html.Attributes exposing (placeholder, value)
 import List
 import Maybe.Extra
-
+import Json.Decode as Json
 
 type alias Task =
     { id : Int, name : String, description : EditableString, status : CompletionStatus }
@@ -36,85 +36,90 @@ type alias Model =
     }
 
 
-initialModel : Model
-initialModel =
-    { tasks =
-        [ { id = 2, name = "Walk the Dog", description = NotEditing "Dog needs to be waled everyday", status = Incomplete }
-        , { id = 1, name = "Groceries", description = NotEditing "Must pick up groceries", status = Incomplete }
-        ]
-    , inputTaskName = ""
-    , visibleTasks = AllTasks
-    , editableDescriptionValue = ""
-    }
+initialModel : Flags -> (Model, Cmd Msg)
+initialModel flags =
+    let
+        _ = Debug.log "flags" flags
+    in
+        ({ tasks =
+            [ { id = 2, name = "Walk the Dog", description = NotEditing "Dog needs to be waled everyday", status = Incomplete }
+            , { id = 1, name = "Groceries", description = NotEditing "Must pick up groceries", status = Incomplete }
+            ]
+        , inputTaskName = ""
+        , visibleTasks = AllTasks
+        , editableDescriptionValue = ""
+        }
+        , Cmd.none)
 
 
 type Msg
     = AddTask
-    | DeleteTask Task
-    | CompleteTask Task
-    | UndoTaskCompletion Task
+    | DeleteTask Int
+    | CompleteTask Int
+    | UndoTaskCompletion Int
     | UpdateInputTaskName String
-    | TriggerDescriptionEdit Task
-    | EditDescription Task
-    | UpdateTaskDescriptionBuffer Task String
-    | CancelEditDescription Task
+    | TriggerDescriptionEdit Int
+    | EditDescription Int
+    | UpdateTaskDescriptionBuffer Int String
+    | CancelEditDescription Int
     | UpdateVisibleTasks VisibleTasks
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         AddTask ->
-            { model
+            ({ model
                 | inputTaskName = ""
                 , tasks = { id = nextTaskId model.tasks, name = model.inputTaskName, description = NotEditing "", status = Incomplete } :: model.tasks
             }
+            , Cmd.none)
 
-        DeleteTask task ->
-            { model
-                | tasks = deleteTask task model.tasks
+        DeleteTask taskId ->
+            ({ model
+                | tasks = deleteTask taskId model.tasks
             }
-
-        CompleteTask task ->
-            { model
-                | tasks = List.map (updateTaskStatus task.id Complete) model.tasks
+            , Cmd.none)
+        CompleteTask taskId ->
+            ({ model
+                | tasks = List.map (updateTaskStatus taskId Complete) model.tasks
             }
-
-        UndoTaskCompletion task ->
-            { model
-                | tasks = List.map (updateTaskStatus task.id Incomplete) model.tasks
+            , Cmd.none)
+        UndoTaskCompletion taskId ->
+            ({ model
+                | tasks = List.map (updateTaskStatus taskId Incomplete) model.tasks
             }
-
+            , Cmd.none)
         UpdateInputTaskName name ->
-            { model
+            ({ model
                 | inputTaskName = name
             }
-
-        TriggerDescriptionEdit task ->
-            { model
-                | tasks = List.map (triggerEditableDescription task.id) model.tasks
+            , Cmd.none)
+        TriggerDescriptionEdit taskId ->
+            ({ model
+                | tasks = List.map (triggerEditableDescription taskId) model.tasks
             }
-
-        EditDescription task ->
-            { model
-                | tasks = List.map (editDescription task.id) model.tasks
+            , Cmd.none)
+        EditDescription taskId ->
+            ({ model
+                | tasks = List.map (editDescription taskId) model.tasks
             }
-
-        UpdateTaskDescriptionBuffer task val ->
-            { model
-                | tasks = List.map (updateTaskDescriptionBuffer task.id val) model.tasks
+            , Cmd.none)
+        UpdateTaskDescriptionBuffer taskId val ->
+           ( { model
+                | tasks = List.map (updateTaskDescriptionBuffer taskId val) model.tasks
             }
-
-        CancelEditDescription task ->
-            { model
-                | tasks = List.map (cancelEditDescription task.id) model.tasks
+            , Cmd.none)
+        CancelEditDescription taskId ->
+            ({ model
+                | tasks = List.map (cancelEditDescription taskId) model.tasks
             }
-
+            , Cmd.none)
         UpdateVisibleTasks visibleTasksType ->
-            { model
+            ({ model
                 | visibleTasks = visibleTasksType
             }
-
+            , Cmd.none)
 
 updateTaskStatus : Int -> CompletionStatus -> Task -> Task
 updateTaskStatus taskId completionStatus task =
@@ -181,10 +186,10 @@ cancelEditDescription taskId task =
         task
 
 
-deleteTask : Task -> List Task -> List Task
-deleteTask task tasks =
+deleteTask : Int -> List Task -> List Task
+deleteTask taskId tasks =
     List.filter
-        (\currentTask -> currentTask.id /= task.id)
+        (\currentTask -> currentTask.id /= taskId)
         tasks
 
 
@@ -244,13 +249,13 @@ taskToggleCompleteButton task =
         element "button"
             |> appendText "Undo"
             |> addClass "undo"
-            |> addAction ( "click", UndoTaskCompletion task )
+            |> addAction ( "click", UndoTaskCompletion task.id )
 
     else
         element "button"
             |> appendText "Complete"
             |> addClass "complete"
-            |> addAction ( "click", CompleteTask task )
+            |> addAction ( "click", CompleteTask task.id )
 
 
 filteredTaskListElements : VisibleTasks -> List Task -> List Task
@@ -274,7 +279,7 @@ taskListElement task =
             , taskToggleCompleteButton task
             , element "span"
                 |> addClass "delete"
-                |> addAction ( "click", DeleteTask task )
+                |> addAction ( "click", DeleteTask task.id )
             , taskDescriptionElement task
             ]
 
@@ -287,14 +292,14 @@ taskDescriptionElement task =
                 element "div"
                     |> addClass "description-container"
                     |> appendText val
-                    |> addAction ( "click", TriggerDescriptionEdit task )
+                    |> addAction ( "click", TriggerDescriptionEdit task.id )
 
             Editing _ bufferVal ->
                 element "div"
                     |> addClass "description"
                     |> appendChildList
                         [ element "input"
-                            |> addInputHandler (UpdateTaskDescriptionBuffer task)
+                            |> addInputHandler (UpdateTaskDescriptionBuffer task.id)
                             |> addClass "description"
                             |> addAttributeList
                                 [ Html.Attributes.value bufferVal
@@ -303,11 +308,11 @@ taskDescriptionElement task =
                         , element "button"
                             |> appendText "Save"
                             |> addClass "save"
-                            |> addAction ( "click", EditDescription task )
+                            |> addAction ( "click", EditDescription task.id )
                         , element "button"
                             |> appendText "Cancel"
                             |> addClass "cancel"
-                            |> addAction ( "click", CancelEditDescription task )
+                            |> addAction ( "click", CancelEditDescription task.id )
                         ]
 
     else
@@ -330,11 +335,16 @@ taskFilterElements =
                 |> addAction ( "click", UpdateVisibleTasks IncompleteTasks )
             ]
 
+type alias Flags =
+    {
+        taskCount : Int
+    }
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
-    Browser.sandbox
+    Browser.document
         { init = initialModel
-        , view = view
+        , view = \model -> { title = "Elm Todo App", body = [view model] }
         , update = update
+        , subscriptions = \_ -> Sub.none
         }
