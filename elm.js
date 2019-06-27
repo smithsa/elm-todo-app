@@ -4310,9 +4310,14 @@ function _Browser_load(url)
 		}
 	}));
 }
+var author$project$Types$AllTasks = {$: 'AllTasks'};
+var author$project$Types$Task = F4(
+	function (id, name, description, status) {
+		return {description: description, id: id, name: name, status: status};
+	});
 var author$project$Types$Complete = {$: 'Complete'};
 var author$project$Types$Incomplete = {$: 'Incomplete'};
-var author$project$Main$completionStatusFromString = function (completionStatusString) {
+var author$project$Types$completionStatusFromString = function (completionStatusString) {
 	switch (completionStatusString) {
 		case 'complete':
 			return author$project$Types$Complete;
@@ -4799,33 +4804,28 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 	});
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$string = _Json_decodeString;
-var author$project$Main$completionStatusDecoder = A2(elm$json$Json$Decode$map, author$project$Main$completionStatusFromString, elm$json$Json$Decode$string);
+var author$project$Types$completionStatusDecoder = A2(elm$json$Json$Decode$map, author$project$Types$completionStatusFromString, elm$json$Json$Decode$string);
 var author$project$Types$NotEditing = function (a) {
 	return {$: 'NotEditing', a: a};
 };
-var author$project$Main$editableStringDecoder = A2(elm$json$Json$Decode$map, author$project$Types$NotEditing, elm$json$Json$Decode$string);
-var author$project$Types$Task = F4(
-	function (id, name, description, status) {
-		return {description: description, id: id, name: name, status: status};
-	});
+var author$project$Types$editableStringDecoder = A2(elm$json$Json$Decode$map, author$project$Types$NotEditing, elm$json$Json$Decode$string);
 var elm$json$Json$Decode$field = _Json_decodeField;
 var elm$json$Json$Decode$int = _Json_decodeInt;
 var elm$json$Json$Decode$map4 = _Json_map4;
-var author$project$Main$taskDecoder = A5(
+var author$project$Types$taskDecoder = A5(
 	elm$json$Json$Decode$map4,
 	author$project$Types$Task,
 	A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
 	A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
-	A2(elm$json$Json$Decode$field, 'description', author$project$Main$editableStringDecoder),
-	A2(elm$json$Json$Decode$field, 'status', author$project$Main$completionStatusDecoder));
+	A2(elm$json$Json$Decode$field, 'description', author$project$Types$editableStringDecoder),
+	A2(elm$json$Json$Decode$field, 'status', author$project$Types$completionStatusDecoder));
 var elm$json$Json$Decode$list = _Json_decodeList;
-var author$project$Main$tasksDecoders = elm$json$Json$Decode$list(author$project$Main$taskDecoder);
-var author$project$Types$AllTasks = {$: 'AllTasks'};
+var author$project$Types$tasksDecoders = elm$json$Json$Decode$list(author$project$Types$taskDecoder);
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var elm$json$Json$Decode$decodeValue = _Json_run;
 var author$project$Main$initialModel = function (flags) {
-	var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$tasksDecoders, flags.tasks);
+	var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Types$tasksDecoders, flags.tasks);
 	if (_n0.$ === 'Ok') {
 		var tasks = _n0.a;
 		return _Utils_Tuple2(
@@ -4837,68 +4837,6 @@ var author$project$Main$initialModel = function (flags) {
 			{inputTaskName: '', tasks: _List_Nil, visibleTasks: author$project$Types$AllTasks},
 			elm$core$Platform$Cmd$none);
 	}
-};
-var elm$json$Json$Encode$string = _Json_wrap;
-var author$project$Main$completionStatusEncoder = function (completionStatus) {
-	if (completionStatus.$ === 'Complete') {
-		return elm$json$Json$Encode$string('complete');
-	} else {
-		return elm$json$Json$Encode$string('incomplete');
-	}
-};
-var author$project$Main$editableStringEncoder = function (editableString) {
-	if (editableString.$ === 'Editing') {
-		var val = editableString.a;
-		var bufferVal = editableString.b;
-		return elm$json$Json$Encode$string(val);
-	} else {
-		var val = editableString.a;
-		return elm$json$Json$Encode$string(val);
-	}
-};
-var elm$json$Json$Encode$int = _Json_wrap;
-var elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, obj) {
-					var k = _n0.a;
-					var v = _n0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var author$project$Main$taskEncoder = function (task) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'id',
-				elm$json$Json$Encode$int(task.id)),
-				_Utils_Tuple2(
-				'name',
-				elm$json$Json$Encode$string(task.name)),
-				_Utils_Tuple2(
-				'description',
-				author$project$Main$editableStringEncoder(task.description)),
-				_Utils_Tuple2(
-				'status',
-				author$project$Main$completionStatusEncoder(task.status))
-			]));
-};
-var elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var author$project$Main$tasksEncoder = function (tasks) {
-	return A2(elm$json$Json$Encode$list, author$project$Main$taskEncoder, tasks);
 };
 var author$project$Main$cancelEditDescription = F2(
 	function (taskId, task) {
@@ -5226,12 +5164,73 @@ var elm$core$Basics$identity = function (x) {
 	return x;
 };
 var author$project$Ports$storeTasks = _Platform_outgoingPort('storeTasks', elm$core$Basics$identity);
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Types$completionStatusEncoder = function (completionStatus) {
+	if (completionStatus.$ === 'Complete') {
+		return elm$json$Json$Encode$string('complete');
+	} else {
+		return elm$json$Json$Encode$string('incomplete');
+	}
+};
+var author$project$Types$editableStringEncoder = function (editableString) {
+	if (editableString.$ === 'Editing') {
+		var val = editableString.a;
+		return elm$json$Json$Encode$string(val);
+	} else {
+		var val = editableString.a;
+		return elm$json$Json$Encode$string(val);
+	}
+};
+var elm$json$Json$Encode$int = _Json_wrap;
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var author$project$Types$taskEncoder = function (task) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				elm$json$Json$Encode$int(task.id)),
+				_Utils_Tuple2(
+				'name',
+				elm$json$Json$Encode$string(task.name)),
+				_Utils_Tuple2(
+				'description',
+				author$project$Types$editableStringEncoder(task.description)),
+				_Utils_Tuple2(
+				'status',
+				author$project$Types$completionStatusEncoder(task.status))
+			]));
+};
+var elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var author$project$Types$tasksEncoder = function (tasks) {
+	return A2(elm$json$Json$Encode$list, author$project$Types$taskEncoder, tasks);
+};
 var author$project$Main$updateWithStorage = F2(
 	function (msg, model) {
 		var _n0 = A2(author$project$Main$update, msg, model);
 		var newModel = _n0.a;
 		var commands = _n0.b;
-		var extractedTasks = author$project$Main$tasksEncoder(newModel.tasks);
+		var extractedTasks = author$project$Types$tasksEncoder(newModel.tasks);
 		return _Utils_Tuple2(
 			newModel,
 			elm$core$Platform$Cmd$batch(

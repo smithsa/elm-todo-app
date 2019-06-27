@@ -4,12 +4,12 @@ import Browser
 import Dom exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (placeholder, value)
+import Json.Decode
 import List
 import Maybe.Extra
-import Json.Decode
-import Json.Encode
 import Ports
 import Types exposing (..)
+
 
 type alias Model =
     { tasks : List Task
@@ -18,87 +18,25 @@ type alias Model =
     }
 
 
-tasksDecoders : Json.Decode.Decoder (List Task)
-tasksDecoders =
-    Json.Decode.list taskDecoder
-
-taskDecoder : Json.Decode.Decoder Task
-taskDecoder =
-    Json.Decode.map4 Task
-        (Json.Decode.field "id" Json.Decode.int)
-        (Json.Decode.field "name" Json.Decode.string)
-        (Json.Decode.field "description" editableStringDecoder)
-        (Json.Decode.field "status" completionStatusDecoder)
-
-editableStringDecoder : Json.Decode.Decoder EditableString
-editableStringDecoder =
-    Json.Decode.string
-        |> Json.Decode.map NotEditing
-
-completionStatusDecoder : Json.Decode.Decoder CompletionStatus
-completionStatusDecoder =
-    Json.Decode.string
-        |> Json.Decode.map completionStatusFromString
-
-completionStatusFromString : String -> CompletionStatus
-completionStatusFromString completionStatusString =
-    case completionStatusString of
-        "complete" ->
-            Complete
-
-        "incomplete" ->
-            Incomplete
-        _ ->
-            Incomplete
-
-tasksEncoder : List Task -> Json.Encode.Value
-tasksEncoder tasks =
-     Json.Encode.list taskEncoder tasks
-
-
-taskEncoder: Task -> Json.Encode.Value
-taskEncoder task =
-    Json.Encode.object
-        [ ( "id",  Json.Encode.int task.id)
-        , ( "name", Json.Encode.string task.name)
-        , ( "description", editableStringEncoder task.description)
-        , ( "status", completionStatusEncoder task.status)
-        ]
-
-editableStringEncoder : EditableString -> Json.Encode.Value
-editableStringEncoder editableString =
-    case editableString of
-        Editing val bufferVal ->
-            Json.Encode.string val
-
-        NotEditing val ->
-            Json.Encode.string val
-
-
-completionStatusEncoder : CompletionStatus -> Json.Encode.Value
-completionStatusEncoder completionStatus =
-    case completionStatus of
-        Complete ->
-            Json.Encode.string "complete"
-
-        Incomplete ->
-            Json.Encode.string "incomplete"
-
-initialModel : Flags -> (Model, Cmd Msg)
+initialModel : Flags -> ( Model, Cmd Msg )
 initialModel flags =
-        case Json.Decode.decodeValue tasksDecoders flags.tasks of
-            Ok tasks ->
-                ({ tasks = tasks
-                , inputTaskName = ""
-                , visibleTasks = AllTasks
-                }
-                , Cmd.none)
-            Err err ->
-                ({ tasks = []
-                , inputTaskName = ""
-                , visibleTasks = AllTasks
-                }
-                , Cmd.none)
+    case Json.Decode.decodeValue Types.tasksDecoders flags.tasks of
+        Ok tasks ->
+            ( { tasks = tasks
+              , inputTaskName = ""
+              , visibleTasks = AllTasks
+              }
+            , Cmd.none
+            )
+
+        Err err ->
+            ( { tasks = []
+              , inputTaskName = ""
+              , visibleTasks = AllTasks
+              }
+            , Cmd.none
+            )
+
 
 type Msg
     = AddTask
@@ -120,68 +58,87 @@ updateWithStorage msg model =
             update msg model
 
         extractedTasks =
-            tasksEncoder newModel.tasks
-
+            Types.tasksEncoder newModel.tasks
     in
-        ( newModel
-        , Cmd.batch [ commands, Ports.storeTasks extractedTasks ]
-        )
+    ( newModel
+    , Cmd.batch [ commands, Ports.storeTasks extractedTasks ]
+    )
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         AddTask ->
-            ({ model
+            ( { model
                 | inputTaskName = ""
                 , tasks = { id = nextTaskId model.tasks, name = model.inputTaskName, description = NotEditing "", status = Incomplete } :: model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
 
         DeleteTask taskId ->
-            ({ model
+            ( { model
                 | tasks = deleteTask taskId model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         CompleteTask taskId ->
-            ({ model
+            ( { model
                 | tasks = List.map (updateTaskStatus taskId Complete) model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         UndoTaskCompletion taskId ->
-            ({ model
+            ( { model
                 | tasks = List.map (updateTaskStatus taskId Incomplete) model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         UpdateInputTaskName name ->
-            ({ model
+            ( { model
                 | inputTaskName = name
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         TriggerDescriptionEdit taskId ->
-            ({ model
+            ( { model
                 | tasks = List.map (triggerEditableDescription taskId) model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         EditDescription taskId ->
-            ({ model
+            ( { model
                 | tasks = List.map (editDescription taskId) model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         UpdateTaskDescriptionBuffer taskId val ->
-           ( { model
+            ( { model
                 | tasks = List.map (updateTaskDescriptionBuffer taskId val) model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         CancelEditDescription taskId ->
-            ({ model
+            ( { model
                 | tasks = List.map (cancelEditDescription taskId) model.tasks
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
         UpdateVisibleTasks visibleTasksType ->
-            ({ model
+            ( { model
                 | visibleTasks = visibleTasksType
-            }
-            , Cmd.none)
+              }
+            , Cmd.none
+            )
+
 
 updateTaskStatus : Int -> CompletionStatus -> Task -> Task
 updateTaskStatus taskId completionStatus task =
@@ -399,12 +356,11 @@ taskFilterElements =
             ]
 
 
-
 main : Program Flags Model Msg
 main =
     Browser.document
         { init = initialModel
-        , view = \model -> { title = "Elm Todo App", body = [view model] }
+        , view = \model -> { title = "Elm Todo App", body = [ view model ] }
         , update = updateWithStorage
         , subscriptions = \_ -> Sub.none
         }
